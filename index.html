@@ -144,7 +144,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <section class="upload-box" id="captionfyManager">
   <h2>Quản lý Captionfy Gameshow</h2><p>Thêm riêng từng link Captionfy, không cần sửa thông tin bộ kịch.</p>
   <form id="captionfyForm"><div class="upload-grid">
-   <div class="field"><label for="captionfyDrama">Chọn gameshow *</label><select id="captionfyDrama" required><option value="">— Chọn gameshow —</option></select></div>
+   <div class="field"><label for="captionfyDrama">Chọn gameshow *</label><select id="captionfyDrama"><option value="">— Không bắt buộc chọn gameshow —</option></select></div>
    <div class="field"><label for="captionfyLabel">Tên tập / nội dung *</label><input id="captionfyLabel" required placeholder="Ví dụ: Tập 01"></div>
    <div class="field full"><label for="captionfyUrl">Link Captionfy *</label><input id="captionfyUrl" type="url" required placeholder="https://..."></div>
   </div><div class="admin-actions"><button class="btn primary" type="submit">Thêm link Captionfy</button><span id="captionfyStatus" class="tiny"></span></div></form>
@@ -153,7 +153,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <section class="upload-box" id="gameshowDriveManager">
   <h2>Quản lý Gameshow · Google Drive</h2><p>Thêm link Google Drive cho từng gameshow.</p>
   <form id="gameshowDriveForm"><div class="upload-grid">
-   <div class="field"><label for="driveDrama">Chọn gameshow *</label><select id="driveDrama" required><option value="">— Chọn gameshow —</option></select></div>
+   <div class="field"><label for="driveDrama">Chọn gameshow *</label><select id="driveDrama"><option value="">— Không bắt buộc chọn gameshow —</option></select></div>
    <div class="field"><label for="driveLabel">Tên tập / nội dung *</label><input id="driveLabel" required placeholder="Ví dụ: Tập 01"></div>
    <div class="field full"><label for="driveUrl">Link Google Drive *</label><input id="driveUrl" type="url" required placeholder="https://drive.google.com/..."></div>
   </div><div class="admin-actions"><button class="btn primary" type="submit">Thêm link Drive</button><span id="driveStatus" class="tiny"></span></div></form>
