@@ -456,20 +456,47 @@ function setupDisplayTools(){
 async function renderComments(){
  const host=$("commentList");if(!host)return;
  host.innerHTML='<p class="tiny">Đang tải lời nhắn...</p>';
- const {data,error}=await db.from("guestbook_comments").select("id,name,message,created_at").order("created_at",{ascending:false}).limit(100);
+ const {data,error}=await db.from("guestbook_comments").select("id,name,message,created_at,user_id").order("created_at",{ascending:false}).limit(100);
  if(error){host.innerHTML='<p class="tiny">Chưa tải được lời nhắn. Vui lòng thử tải lại trang.</p>';console.error("Tải lời nhắn:",error.message);return;}
  if(!data?.length){host.innerHTML='<p class="tiny">Chưa có lời nhắn nào. Hãy là người đầu tiên nhé!</p>';return;}
- host.innerHTML=data.map(c=>'<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p>'+(role==="admin"?'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa lời nhắn</button></div>':"")+'</article>').join("");
+ const {data:replies,error:replyError}=await db.from("guestbook_replies").select("id,comment_id,user_id,name,message,created_at").order("created_at",{ascending:true});
+ if(replyError)console.warn("Tải trả lời:",replyError.message);
+ const replyRows=replies||[];
+ host.innerHTML=data.map(c=>{
+  const canDelete=role==="admin"||(!!user&&c.user_id===user.id);
+  const child=replyRows.filter(r=>r.comment_id===c.id);
+  const replyHtml=child.map(r=>{
+   const canDeleteReply=role==="admin"||(!!user&&r.user_id===user.id);
+   return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0;line-height:1.6">'+esc(r.message)+'</p>'+(canDeleteReply?'<button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button>':"")+'</div>';
+  }).join("");
+  const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" style="margin:12px 0 0 16px"><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea><div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
+  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p>'+(canDelete?'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa lời nhắn</button></div>':"")+replyHtml+replyForm+'</article>';
+ }).join("");
 }
 function setupComments(){
  const form=$("commentForm");if(!form)return;
  $("commentList").addEventListener("click",async e=>{
-  const btn=e.target.closest("[data-delete-comment]");
-  if(!btn||role!=="admin")return;
-  if(!confirm("Bà có chắc muốn xóa lời nhắn này không?"))return;
+  const btn=e.target.closest("[data-delete-comment],[data-delete-reply]");
+  if(!btn)return;
+  const isReply=btn.hasAttribute("data-delete-reply");
+  if(!confirm(isReply?"Bà có chắc muốn xóa câu trả lời này không?":"Bà có chắc muốn xóa lời nhắn này không?"))return;
   btn.disabled=true;
-  const {error}=await db.from("guestbook_comments").delete().eq("id",btn.dataset.deleteComment);
-  if(error){notice("Không xóa được lời nhắn: "+error.message);btn.disabled=false;return;}
+  const table=isReply?"guestbook_replies":"guestbook_comments";
+  const id=isReply?btn.dataset.deleteReply:btn.dataset.deleteComment;
+  const {error}=await db.from(table).delete().eq("id",id);
+  if(error){notice("Không xóa được: "+error.message);btn.disabled=false;return;}
+  await renderComments();
+ });
+ $("commentList").addEventListener("submit",async e=>{
+  const replyForm=e.target.closest("[data-reply-form]");if(!replyForm)return;
+  e.preventDefault();
+  if(!user){notice("Bà đăng nhập để trả lời lời nhắn nha.");return;}
+  const commentId=replyForm.dataset.replyForm,message=replyForm.elements.reply.value.trim();
+  const status=replyForm.querySelector("[data-reply-status]"),button=replyForm.querySelector("button");
+  if(!message)return;
+  button.disabled=true;status.textContent="Đang gửi trả lời...";
+  const {error}=await db.from("guestbook_replies").insert({comment_id:commentId,user_id:user.id,name:user.user_metadata?.display_name||user.email?.split("@")[0]||"Thành viên",message});
+  if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
   await renderComments();
  });
  form.addEventListener("submit",async e=>{
@@ -477,7 +504,7 @@ function setupComments(){
   const name=$("commentName").value.trim(),message=$("commentMessage").value.trim(),status=$("commentStatus"),button=$("commentSubmit");
   if(!name||!message){status.textContent="Bà điền tên và lời nhắn nha.";return;}
   button.disabled=true;status.textContent="Đang gửi lời nhắn...";
-  const {error}=await db.from("guestbook_comments").insert({name,message});
+  const {error}=await db.from("guestbook_comments").insert({name,message,...(user?{user_id:user.id}:{})});
   if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
   form.reset();status.textContent="Đã gửi lời nhắn thành công. Cảm ơn bạn ♡";button.disabled=false;await renderComments();
  });
