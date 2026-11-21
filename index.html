@@ -70,12 +70,33 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 .toc strong{font-size:16px;color:var(--accent);margin-right:4px}.toc a{display:inline-block;text-decoration:none;color:var(--ink);background:#f1e6d8;border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:14px}.toc a:hover{background:#e8d8c6}
 .public-captionfy{padding:20px}.public-captionfy .episode{font-size:15px}
 @media(max-width:520px){.toc{gap:7px;padding:11px}.toc strong{width:100%}.toc a{font-size:13px;padding:7px 10px}}
+
+/* Chế độ giao diện tối */
+:root[data-theme="dark"]{
+ color-scheme:dark;
+ --bg:#191715;--paper:#24211e;--paper2:#302a25;--ink:#eee5da;--muted:#b7a99a;
+ --accent:#c49b79;--accent2:#d2ad8d;--line:#494039;--shadow:0 16px 42px rgba(0,0,0,.24);
+}
+:root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] .nav,:root[data-theme="dark"] .toc,:root[data-theme="dark"] .admin,:root[data-theme="dark"] .upload-box,:root[data-theme="dark"] .card,:root[data-theme="dark"] .detailbox,:root[data-theme="dark"] .video-item{background:var(--paper);color:var(--ink)}
+:root[data-theme="dark"] .btn,:root[data-theme="dark"] .chip,:root[data-theme="dark"] .toc a{background:var(--paper2);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .btn.primary,:root[data-theme="dark"] .open{background:var(--accent);color:#211811;border-color:var(--accent)}
+:root[data-theme="dark"] .searchrow input,:root[data-theme="dark"] .field input,:root[data-theme="dark"] .field textarea,:root[data-theme="dark"] .field select,:root[data-theme="dark"] .upload-grid input,:root[data-theme="dark"] .upload-grid textarea,:root[data-theme="dark"] .upload-grid select{background:#302b26;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .episode{background:#302b26;color:var(--ink)}
+:root[data-theme="dark"] .episode a{color:#e0b994}
+:root[data-theme="dark"] .chip.active{background:#514235;color:#f1dfcb}
+:root[data-theme="dark"] .hero{background:linear-gradient(115deg,#40352c,#302821 58%,#49382c)}
+:root[data-theme="dark"] .hero h2{color:#f0dfce}
+:root[data-theme="dark"] .hero p,:root[data-theme="dark"] .eyebrow{color:#d0b69d}
+:root[data-theme="dark"] .mark{background:#514235;color:#f0d9c2}
+:root[data-theme="dark"] .detailcover{background:linear-gradient(135deg,#594332,#8b684e)}
+
 </style>
 </head>
 <body>
 <header><div class="wrap nav">
  <div class="brand"><div class="mark">❧</div><div><h1>Góc Nhỏ Của Cá</h1><p>CÁ NHỎ HỌC SUB</p></div></div>
- <div class="nav-actions"><button class="btn" id="accountBtn" type="button">Đăng nhập</button><button class="btn" id="homeBtn">Trang chủ</button><button class="btn primary" id="adminBtn">Quản lý</button></div>
+ <div class="nav-actions"><button class="btn" id="shareBtn" type="button">↗ Chia sẻ</button><button class="btn" id="themeBtn" type="button" aria-label="Chuyển giao diện">☾ Tối</button><button class="btn" id="accountBtn" type="button">Đăng nhập</button><button class="btn" id="homeBtn">Trang chủ</button><button class="btn primary" id="adminBtn">Quản lý</button></div>
 </div></header>
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
@@ -401,6 +422,16 @@ async function renderRoleManager(){
   host.innerHTML='<h3 style="font-weight:normal">Quản lý tài khoản & phân quyền</h3><p>Admin có toàn quyền; Uploader được đăng nội dung; Viewer chỉ xem.</p>'+(data||[]).map(p=>'<div class="episode"><span>'+esc(p.email||p.id)+'</span><select data-role-user="'+esc(p.id)+'" class="btn"><option value="viewer" '+(p.role==="viewer"?"selected":"")+'>Viewer</option><option value="uploader" '+(p.role==="uploader"?"selected":"")+'>Uploader</option><option value="admin" '+(p.role==="admin"?"selected":"")+'>Admin</option></select></div>').join("");
   host.onchange=async e=>{const s=e.target.closest("[data-role-user]");if(!s)return;if(s.dataset.roleUser===user.id&&s.value!=="admin"){s.value="admin";return notice("Không thể tự hạ quyền Admin đang đăng nhập.");}const {error}=await db.from("profiles").update({role:s.value}).eq("id",s.dataset.roleUser);if(error){notice(error.message);await renderRoleManager();}else notice("Đã cập nhật vai trò.");};
 }
+
+function setupDisplayTools(){
+ const root=document.documentElement,themeBtn=$("themeBtn"),shareBtn=$("shareBtn");
+ const applyTheme=theme=>{root.dataset.theme=theme;themeBtn.textContent=theme==="dark"?"☀ Sáng":"☾ Tối";themeBtn.setAttribute("aria-label",theme==="dark"?"Chuyển sang giao diện sáng":"Chuyển sang giao diện tối");const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=theme==="dark"?"#191715":"#eee3d2";};
+ let saved="light";try{saved=localStorage.getItem("gocnho-theme")||"light";}catch{}
+ applyTheme(saved==="dark"?"dark":"light");
+ themeBtn.addEventListener("click",()=>{const next=root.dataset.theme==="dark"?"light":"dark";applyTheme(next);try{localStorage.setItem("gocnho-theme",next);}catch{}});
+ shareBtn.addEventListener("click",async()=>{const data={title:document.title,text:"Ghé thăm Góc Nhỏ Của Cá nhé!",url:location.href};try{if(navigator.share){await navigator.share(data);}else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(location.href);notice("Đã sao chép link website!");}else{window.prompt("Sao chép link website:",location.href);}}catch(err){if(err?.name!=="AbortError")window.prompt("Sao chép link website:",location.href);}});
+}
+
 function setupNavigation(){
   $("list").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)showDetail(b.dataset.open);});
   $("filters").addEventListener("click",e=>{const b=e.target.closest("[data-genre]");if(b){activeGenre=b.dataset.genre;render();}});
@@ -408,7 +439,7 @@ function setupNavigation(){
   $("adminPanel").querySelector("p").textContent="Nội dung được lưu trên Supabase và chia sẻ cho mọi khách truy cập. Quyền ghi được kiểm soát bằng tài khoản và chính sách RLS.";
 }
 (async function init(){
-  addAuthUI();setupNavigation();setupForms();
+  addAuthUI();setupDisplayTools();setupNavigation();setupForms();
   $("videoUploader").querySelector("p").textContent="Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch và phát được trên các thiết bị khác.";
   $("novelShelf").querySelector("p").textContent="Tạo tiểu thuyết, đính kèm PDF/EPUB/TXT và đăng chương. Dữ liệu được chia sẻ trên website.";
   const {data:{session}}=await db.auth.getSession();
