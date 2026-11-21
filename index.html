@@ -101,7 +101,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
 <main>
-<nav class="toc" aria-label="Mục lục tổng"><strong>☰ Mục lục</strong><a href="#catalog">Thư viện kịch</a><a href="#gameshowCaptionfy">Captionfy Gameshow</a><a href="#publicGameshowDrive">Gameshow · Drive</a><a href="#publicNovelShelf">Kệ tiểu thuyết</a></nav>
+<nav class="toc" aria-label="Mục lục tổng"><strong>☰ Mục lục</strong><a href="#catalog">Thư viện kịch</a><a href="#gameshowCaptionfy">Captionfy Gameshow</a><a href="#publicGameshowDrive">Gameshow · Drive</a><a href="#publicNovelShelf">Kệ tiểu thuyết</a><a href="#guestbook">Lời nhắn</a></nav>
 <section id="catalog">
  <div class="section-top"><div><h2>Thư viện của Cá</h2><p>Khám phá các câu chuyện, dự án phụ đề và kịch truyền thanh.</p></div><span class="tiny" id="total"></span></div>
  <div class="searchrow"><input id="search" type="search" placeholder="Tìm tên kịch, tác giả hoặc thể loại..."></div>
@@ -189,6 +189,20 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
   <h3 style="font-weight:normal;margin:24px 0 8px">Tiểu thuyết đã đăng trên website</h3>
   <div id="novelLibrary" class="video-library"></div>
   <p class="tiny">Tiểu thuyết và file đính kèm được lưu trên kho dữ liệu chung của website.</p>
+</section>
+
+
+<section class="upload-box" id="guestbook" style="margin-top:30px">
+ <div class="section-top"><div><h2>💌 Để lại lời nhắn</h2><p>Cá rất vui khi được đọc những chia sẻ của mọi người. Hãy để lại vài dòng ở đây nhé!</p></div></div>
+ <form id="commentForm">
+  <div class="upload-grid">
+   <div class="field"><label for="commentName">Tên / biệt danh *</label><input id="commentName" maxlength="60" required placeholder="Bạn muốn được gọi là gì?"></div>
+   <div class="field full"><label for="commentMessage">Lời nhắn của bạn *</label><textarea id="commentMessage" maxlength="1000" required placeholder="Viết lời nhắn dễ thương cho Góc Nhỏ Của Cá..."></textarea></div>
+  </div>
+  <div class="admin-actions"><button class="btn primary" id="commentSubmit" type="submit">Gửi lời nhắn ♡</button><span id="commentStatus" class="tiny" aria-live="polite"></span></div>
+ </form>
+ <h3 style="font-weight:normal;margin:24px 0 10px">Lời nhắn từ mọi người</h3>
+ <div id="commentList" aria-live="polite"><p class="tiny">Đang tải lời nhắn...</p></div>
 </section>
 
 <footer>GÓC NHỎ CỦA CÁ · MỘT CHIẾC KỆ NHỎ DÀNH CHO NHỮNG CÂU CHUYỆN</footer>
@@ -432,6 +446,28 @@ function setupDisplayTools(){
  shareBtn.addEventListener("click",async()=>{const data={title:document.title,text:"Ghé thăm Góc Nhỏ Của Cá nhé!",url:location.href};try{if(navigator.share){await navigator.share(data);}else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(location.href);notice("Đã sao chép link website!");}else{window.prompt("Sao chép link website:",location.href);}}catch(err){if(err?.name!=="AbortError")window.prompt("Sao chép link website:",location.href);}});
 }
 
+
+async function renderComments(){
+ const host=$("commentList");if(!host)return;
+ host.innerHTML='<p class="tiny">Đang tải lời nhắn...</p>';
+ const {data,error}=await db.from("guestbook_comments").select("id,name,message,created_at").order("created_at",{ascending:false}).limit(100);
+ if(error){host.innerHTML='<p class="tiny">Chưa tải được lời nhắn. Vui lòng thử tải lại trang.</p>';console.error("Tải lời nhắn:",error.message);return;}
+ if(!data?.length){host.innerHTML='<p class="tiny">Chưa có lời nhắn nào. Hãy là người đầu tiên nhé!</p>';return;}
+ host.innerHTML=data.map(c=>'<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p></article>').join("");
+}
+function setupComments(){
+ const form=$("commentForm");if(!form)return;
+ form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const name=$("commentName").value.trim(),message=$("commentMessage").value.trim(),status=$("commentStatus"),button=$("commentSubmit");
+  if(!name||!message){status.textContent="Bà điền tên và lời nhắn nha.";return;}
+  button.disabled=true;status.textContent="Đang gửi lời nhắn...";
+  const {error}=await db.from("guestbook_comments").insert({name,message});
+  if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
+  form.reset();status.textContent="Đã gửi lời nhắn thành công. Cảm ơn bạn ♡";button.disabled=false;await renderComments();
+ });
+}
+
 function setupNavigation(){
   $("list").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)showDetail(b.dataset.open);});
   $("filters").addEventListener("click",e=>{const b=e.target.closest("[data-genre]");if(b){activeGenre=b.dataset.genre;render();}});
@@ -439,7 +475,7 @@ function setupNavigation(){
   $("adminPanel").querySelector("p").textContent="Nội dung được lưu trên Supabase và chia sẻ cho mọi khách truy cập. Quyền ghi được kiểm soát bằng tài khoản và chính sách RLS.";
 }
 (async function init(){
-  addAuthUI();setupDisplayTools();setupNavigation();setupForms();
+  addAuthUI();setupDisplayTools();setupNavigation();setupForms();setupComments();renderComments();
   $("videoUploader").querySelector("p").textContent="Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch và phát được trên các thiết bị khác.";
   $("novelShelf").querySelector("p").textContent="Tạo tiểu thuyết, đính kèm PDF/EPUB/TXT và đăng chương. Dữ liệu được chia sẻ trên website.";
   const {data:{session}}=await db.auth.getSession();
