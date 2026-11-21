@@ -318,7 +318,7 @@ async function renderPublicNovelShelf(){
   const rows=error?[]:(chapters||[]);
   host.innerHTML=novels.map(b=>{
     const own=rows.filter(c=>c.novel_id===b.id);
-    const cover=b.cover_url?'<div class="cover" style="height:170px;background:linear-gradient(#46372d33,#46372d55),url(\'+esc(b.cover_url)+'\') center/cover"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>':'<div class="cover" style="height:170px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>';
+    const cover='<div class="cover" style="height:170px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>';
     const file=b.attachment_path?'<p><a href="'+esc(db.storage.from("goc-nho-books").getPublicUrl(b.attachment_path).data.publicUrl)+'" target="_blank" rel="noopener">Mở sách đính kèm ↗</a></p>':"";
     const chapterHtml=own.length?'<details style="margin-top:12px"><summary>Danh sách chương ('+own.length+')</summary>'+own.map(c=>'<details style="padding:9px 0;border-top:1px solid var(--line)"><summary>'+esc(c.title||("Chương "+c.chapter_number))+'</summary><div style="white-space:pre-wrap;line-height:1.85;padding:10px 0">'+esc(c.content||"")+'</div></details>').join("")+'</details>':'<p class="tiny">Chưa có chương nào.</p>';
     return '<article class="card">'+cover+'<div class="cardbody"><div class="genre">'+esc(b.genre||"Tiểu thuyết")+'</div><h3>'+esc(b.title)+'</h3><div class="byline">Tác giả: '+esc(b.author||"Đang cập nhật")+'</div><p>'+esc(b.description||"")+'</p>'+file+'<div class="tiny">'+own.length+' chương</div>'+chapterHtml+'</div></article>';
