@@ -73,6 +73,11 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <div class="filters" id="filters"></div>
  <div class="grid" id="list"></div><div class="empty" id="empty">Chưa tìm thấy bộ kịch phù hợp.</div>
 </section>
+<section id="publicNovelShelf" style="margin-top:34px">
+ <div class="section-top"><div><h2>Kệ tiểu thuyết</h2><p>Những câu chuyện và chương mới được Cá chia sẻ.</p></div></div>
+ <div id="publicNovelList" class="grid"></div>
+ <p id="publicNovelEmpty" class="empty" style="display:none">Chưa có tiểu thuyết nào được đăng.</p>
+</section>
 <section id="detail" class="detail"><button class="btn back" id="backBtn">← Trở về kệ truyện</button><article class="detailbox" id="detailContent"></article></section>
 <section class="admin" id="adminPanel">
  <h2>Góc quản lý của Cá</h2>
@@ -237,7 +242,7 @@ async function loadContent() {
   if (dr.error) console.error("Tải dramas:",dr.error.message); else dramas = dr.data || [];
   if (vi.error) console.error("Tải videos:",vi.error.message); else videos = vi.data || [];
   if (no.error) console.error("Tải novels:",no.error.message); else novels = no.data || [];
-  render(); renderManage(); await renderVideoLibrary(); await renderNovelLibrary();
+  render(); renderManage(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
 }
 function cloneForm(id) { const old=$(id), fresh=old.cloneNode(true); old.replaceWith(fresh); return fresh; }
 function setupForms() {
@@ -303,6 +308,20 @@ async function renderVideoLibrary(){
   const host=$("videoLibrary");if(!host)return;
   if(!videos.length){host.innerHTML='<p class="tiny">Chưa có video nào trong kho chung.</p>';return;}
   host.innerHTML=videos.map(v=>{const url=db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;return '<article class="video-item"><video controls preload="metadata" playsinline src="'+esc(url)+'"></video><h3>'+esc(v.title)+'</h3><p>'+esc(v.drama||"")+' · '+esc(v.description||"")+'</p>'+(role==="admin"?'<div class="video-actions"><button data-delete-video="'+esc(v.id)+'">Xóa video</button></div>':"")+'</article>';}).join("");
+}
+async function renderPublicNovelShelf(){
+  const host=$("publicNovelList"),empty=$("publicNovelEmpty");if(!host)return;
+  if(!novels.length){host.innerHTML="";empty.style.display="block";return;}
+  empty.style.display="none";
+  const {data:chapters,error}=await db.from("chapters").select("id,novel_id,chapter_number,title,content").order("chapter_number",{ascending:true});
+  const rows=error?[]:(chapters||[]);
+  host.innerHTML=novels.map(b=>{
+    const own=rows.filter(c=>c.novel_id===b.id);
+    const cover=b.cover_url?'<div class="cover" style="height:170px;background:linear-gradient(#46372d33,#46372d55),url(\\''+esc(b.cover_url)+'\\') center/cover"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>':'<div class="cover" style="height:170px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>';
+    const file=b.attachment_path?'<p><a href="'+esc(db.storage.from("goc-nho-books").getPublicUrl(b.attachment_path).data.publicUrl)+'" target="_blank" rel="noopener">Mở sách đính kèm ↗</a></p>':"";
+    const chapterHtml=own.length?'<details style="margin-top:12px"><summary>Danh sách chương ('+own.length+')</summary>'+own.map(c=>'<details style="padding:9px 0;border-top:1px solid var(--line)"><summary>'+esc(c.title||("Chương "+c.chapter_number))+'</summary><div style="white-space:pre-wrap;line-height:1.85;padding:10px 0">'+esc(c.content||"")+'</div></details>').join("")+'</details>':'<p class="tiny">Chưa có chương nào.</p>';
+    return '<article class="card">'+cover+'<div class="cardbody"><div class="genre">'+esc(b.genre||"Tiểu thuyết")+'</div><h3>'+esc(b.title)+'</h3><div class="byline">Tác giả: '+esc(b.author||"Đang cập nhật")+'</div><p>'+esc(b.description||"")+'</p>'+file+'<div class="tiny">'+own.length+' chương</div>'+chapterHtml+'</div></article>';
+  }).join("");
 }
 async function renderNovelLibrary(){
   const host=$("novelLibrary");if(!host)return;
