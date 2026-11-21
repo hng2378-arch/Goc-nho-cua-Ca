@@ -290,7 +290,7 @@ function setupForms() {
     const {data:existing,error:readErr}=await db.from("chapters").select("chapter_number").eq("novel_id",form.dataset.bookId).order("chapter_number",{ascending:false}).limit(1);
     if(readErr){status.textContent=readErr.message;return;}
     const n=(existing?.[0]?.chapter_number||0)+1;
-    const {error}=await db.from("chapters").insert({novel_id:form.dataset.bookId,chapter_number:n,title,content,created_by:user.id});
+    const {error}=await db.from("chapters").insert({novel_id:form.dataset.bookId,chapter_number:n,title,content});
     if(error)status.textContent=error.message;else await loadContent();
   });
   $("novelLibrary").addEventListener("click",async e=>{
