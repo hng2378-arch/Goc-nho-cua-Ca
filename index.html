@@ -91,9 +91,13 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 :root[data-theme="dark"] .mark{background:#514235;color:#f0d9c2}
 :root[data-theme="dark"] .detailcover{background:linear-gradient(135deg,#594332,#8b684e)}
 
+
+.visitor-note{width:min(1120px,calc(100% - 32px));margin:12px auto 0;padding:10px 16px;text-align:center;border:1px solid var(--line);border-radius:14px;background:var(--paper2);color:var(--accent);font: bold 14px "EB Garamond",Georgia,serif;letter-spacing:1px}
+@media(max-width:520px){.visitor-note{width:calc(100% - 20px);font-size:12px;padding:9px 10px}}
 </style>
 </head>
 <body>
+<div class="visitor-note">KHÔNG CẦN ĐĂNG NHẬP NẾU KHÔNG PHẢI ADMIN</div>
 <header><div class="wrap nav">
  <div class="brand"><div class="mark">❧</div><div><h1>Góc Nhỏ Của Cá</h1><p>CÁ NHỎ HỌC SUB</p></div></div>
  <div class="nav-actions"><button class="btn" id="shareBtn" type="button">↗ Chia sẻ</button><button class="btn" id="themeBtn" type="button" aria-label="Chuyển giao diện">☾ Tối</button><button class="btn" id="accountBtn" type="button">Đăng nhập</button><button class="btn" id="homeBtn">Trang chủ</button><button class="btn primary" id="adminBtn">Quản lý</button></div>
