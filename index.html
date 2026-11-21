@@ -165,7 +165,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
   <form id="videoForm">
     <div class="upload-grid">
       <div class="field"><label for="videoTitle">Tên clip / tập *</label><input id="videoTitle" required placeholder="Ví dụ: Tập 01 — Gặp lại"></div>
-      <div class="field"><label for="videoDrama">Chọn bộ kịch *</label><select id="videoDrama" required><option value="">— Chọn bộ kịch —</option></select></div>
+      <div class="field"><label for="videoDrama">Phân loại bộ kịch (không bắt buộc)</label><select id="videoDrama"><option value="">— Không phân loại —</option></select></div>
       <div class="field full"><label for="videoFile">Chọn video MP4 *</label><input id="videoFile" type="file" accept="video/mp4,.mp4" required></div>
       <div class="field full"><label for="videoDescription">Mô tả (không bắt buộc)</label><textarea id="videoDescription" placeholder="Thông tin về tập này..."></textarea></div>
     </div>
@@ -345,7 +345,7 @@ function setupForms() {
   const videoForm=cloneForm("videoForm");
   videoForm.addEventListener("submit",async e=>{
     e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
-    const file=$("videoFile").files[0],status=$("uploadStatus"),btn=$("uploadButton"),dramaTitle=$("videoDrama").value;if(!dramaTitle){status.textContent="Hãy chọn bộ kịch trước khi tải tập.";return;}if(!file)return;
+    const file=$("videoFile").files[0],status=$("uploadStatus"),btn=$("uploadButton"),dramaTitle=$("videoDrama").value.trim()||"Chưa phân loại";if(!file)return;
     if(file.type!=="video/mp4"&&!file.name.toLowerCase().endsWith(".mp4")){status.textContent="Vui lòng chọn file MP4.";return;}
     if(file.size>500*1024*1024){status.textContent="Video vượt quá 500 MB.";return;}
     btn.disabled=true;status.textContent="Đang tải video lên Supabase...";
