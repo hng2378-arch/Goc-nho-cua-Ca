@@ -151,10 +151,11 @@ let user = null, role = "viewer", dramas = [], videos = [], novels = [], activeG
 
 function addAuthUI() {
   const actions = document.querySelector(".nav-actions");
-  if (actions && !$("accountBtn")) {
-    const b = document.createElement("button"); b.className = "btn"; b.id = "accountBtn"; b.textContent = "Đăng nhập"; actions.prepend(b);
-    b.onclick = () => user ? signOut() : openAuth();
+  let accountButton = $("accountBtn");
+  if (actions && !accountButton) {
+    accountButton = document.createElement("button"); accountButton.className = "btn"; accountButton.id = "accountBtn"; accountButton.textContent = "Đăng nhập"; actions.prepend(accountButton);
   }
+  if (accountButton) accountButton.onclick = () => user ? signOut() : openAuth();
   const modal = document.createElement("div");
   modal.id = "authModal";
   modal.style.cssText = "display:none;position:fixed;inset:0;background:#21170dcc;z-index:1000;align-items:center;justify-content:center;padding:18px";
