@@ -278,7 +278,7 @@ function setupForms() {
     e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
     const file=$("novelFile").files[0],status=$("novelUploadStatus"),btn=$("novelUploadButton");let attachment_path=null,attachment_name=null;
     if(file){const ext=file.name.split(".").pop().toLowerCase();if(!["pdf","epub","txt"].includes(ext)){status.textContent="Chỉ nhận PDF, EPUB hoặc TXT.";return;}if(file.size>100*1024*1024){status.textContent="File vượt quá 100 MB.";return;}const path=user.id+"/"+Date.now()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const up=await db.storage.from("goc-nho-books").upload(path,file,{contentType:file.type||"application/octet-stream"});if(up.error){status.textContent="Tải file thất bại: "+up.error.message;return;}attachment_path=path;attachment_name=file.name;}
-    btn.disabled=true;const result=await db.from("novels").insert({title:$("novelTitle").value.trim(),author:$("novelAuthor").value.trim(),genre:$("novelGenre").value.trim(),cover_url:$("novelCover").value.trim()||null,description:$("novelDescription").value.trim(),attachment_path,created_by:user.id});
+    btn.disabled=true;const result=await db.from("novels").insert({title:$("novelTitle").value.trim(),author:$("novelAuthor").value.trim(),genre:$("novelGenre").value.trim(),cover_url:$("novelCover").value.trim()||null,description:$("novelDescription").value.trim(),attachment_path});
     if(result.error){if(attachment_path)await db.storage.from("goc-nho-books").remove([attachment_path]);status.textContent="Không lưu được truyện: "+result.error.message;}
     else{novelForm.reset();status.textContent="Đã thêm tiểu thuyết vào kệ chung.";await loadContent();}btn.disabled=false;
   });
