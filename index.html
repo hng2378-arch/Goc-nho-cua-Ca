@@ -92,26 +92,24 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
   <div class="admin-actions"><button class="btn primary" type="submit">Lưu bộ kịch</button><button class="btn" type="button" id="clearForm">Xóa nội dung form</button></div>
  </form>
  <div style="margin-top:22px"><h3 style="font-weight:normal">Danh sách đang quản lý</h3><div id="manageList"></div></div>
-</section>
-</main>
-
 <section class="upload-box" id="videoUploader">
-  <h2>Kho video của Cá</h2>
-  <p>Tải MP4 trực tiếp từ thiết bị, lưu trong trình duyệt này và phát ngay tại website. Chọn file nhỏ/vừa để tránh đầy bộ nhớ thiết bị.</p>
+  <h2>Đăng tập video cho bộ kịch</h2>
+  <p>Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch.</p>
   <form id="videoForm">
     <div class="upload-grid">
       <div class="field"><label for="videoTitle">Tên clip / tập *</label><input id="videoTitle" required placeholder="Ví dụ: Tập 01 — Gặp lại"></div>
-      <div class="field"><label for="videoDrama">Tên bộ kịch</label><input id="videoDrama" placeholder="Tên bộ kịch"></div>
+      <div class="field"><label for="videoDrama">Chọn bộ kịch *</label><select id="videoDrama" required><option value="">— Chọn bộ kịch —</option></select></div>
       <div class="field full"><label for="videoFile">Chọn video MP4 *</label><input id="videoFile" type="file" accept="video/mp4,.mp4" required></div>
       <div class="field full"><label for="videoDescription">Mô tả (không bắt buộc)</label><textarea id="videoDescription" placeholder="Thông tin về tập này..."></textarea></div>
     </div>
     <div class="admin-actions"><button class="btn primary" type="submit" id="uploadButton">Tải video lên kho</button><span id="uploadStatus" class="tiny" aria-live="polite"></span></div>
   </form>
-  <h3 style="font-weight:normal;margin:24px 0 8px">Video đã tải trên thiết bị này</h3>
+  <h3 style="font-weight:normal;margin:24px 0 8px">Các tập video đã đăng</h3>
   <div id="videoLibrary" class="video-library"></div>
-  <p class="tiny">Lưu ý: bản này lưu video trong IndexedDB của trình duyệt trên thiết bị hiện tại. Video chưa tự tải lên máy chủ nên khách truy cập từ thiết bị khác sẽ không nhìn thấy. Không xóa dữ liệu trang web/trình duyệt nếu muốn giữ các clip đã lưu.</p>
+  <p class="tiny">Video được lưu trên Supabase và hiển thị trong trang chi tiết của bộ kịch tương ứng.</p>
 </section>
-
+</section>
+</main>
 
 <section class="upload-box" id="novelShelf">
   <h2>Kệ tiểu thuyết của Cá</h2>
@@ -206,7 +204,12 @@ function showDetail(id) {
   const d = dramas.find(x => x.id===id); if (!d) return; currentDrama = id;
   $("catalog").style.display = "none"; $("adminPanel").style.display = "none"; $("detail").style.display = "block";
   const links = Array.isArray(d.links) ? d.links : [];
-  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p>'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link nghe ↗</a></div>').join(""):'<p class="byline">Chưa có link nghe cho bộ kịch này.</p>')+'</div>';
+  const dramaVideos = videos.filter(v => (v.drama || "").trim() === (d.title || "").trim());
+  const videoEpisodes = dramaVideos.map(v => {
+    const url = db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;
+    return '<div class="episode" style="display:block"><div style="margin-bottom:9px"><b>'+esc(v.title)+'</b></div><video controls preload="metadata" playsinline style="width:100%;max-height:420px;background:#211a16;border-radius:12px" src="'+esc(url)+'"></video>'+(v.description?'<p class="byline">'+esc(v.description)+'</p>':"")+'</div>';
+  }).join("");
+  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p>'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(videoEpisodes || "")+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link ↗</a></div>').join(""):"")+(videoEpisodes || links.length ? "" : '<p class="byline">Bộ kịch chưa có tập video hoặc link nghe.</p>')+'</div>';
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function home() { $("detail").style.display="none"; $("adminPanel").style.display="none"; $("catalog").style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
@@ -217,6 +220,12 @@ function manage() {
   renderManage(); $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderManage() {
+  const dramaSelect = $("videoDrama");
+  if (dramaSelect) {
+    const selected = dramaSelect.value;
+    dramaSelect.innerHTML = '<option value="">— Chọn bộ kịch —</option>' + dramas.map(d => '<option value="'+esc(d.title)+'">'+esc(d.title)+'</option>').join("");
+    if (selected && dramas.some(d => d.title === selected)) dramaSelect.value = selected;
+  }
   $("manageList").innerHTML = dramas.map(d => '<div class="episode"><span><b>'+esc(d.title)+'</b> <span class="tiny">— '+esc(d.author||"")+'</span></span><span><button class="btn" data-edit="'+esc(d.id)+'">Sửa</button> <button class="btn" data-delete="'+esc(d.id)+'">Xóa</button></span></div>').join("") || '<p class="tiny">Chưa có bộ kịch.</p>';
 }
 async function loadContent() {
@@ -251,14 +260,14 @@ function setupForms() {
   const videoForm=cloneForm("videoForm");
   videoForm.addEventListener("submit",async e=>{
     e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
-    const file=$("videoFile").files[0],status=$("uploadStatus"),btn=$("uploadButton");if(!file)return;
+    const file=$("videoFile").files[0],status=$("uploadStatus"),btn=$("uploadButton"),dramaTitle=$("videoDrama").value;if(!dramaTitle){status.textContent="Hãy chọn bộ kịch trước khi tải tập.";return;}if(!file)return;
     if(file.type!=="video/mp4"&&!file.name.toLowerCase().endsWith(".mp4")){status.textContent="Vui lòng chọn file MP4.";return;}
     if(file.size>500*1024*1024){status.textContent="Video vượt quá 500 MB.";return;}
     btn.disabled=true;status.textContent="Đang tải video lên Supabase...";
     const path=user.id+"/"+Date.now()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
     const up=await db.storage.from("goc-nho-videos").upload(path,file,{contentType:"video/mp4",upsert:false});
     if(up.error){status.textContent="Tải lên thất bại: "+up.error.message;btn.disabled=false;return;}
-    const ins=await db.from("videos").insert({title:$("videoTitle").value.trim(),drama:$("videoDrama").value.trim(),description:$("videoDescription").value.trim(),storage_path:path,mime_type:"video/mp4",size_bytes:file.size,created_by:user.id});
+    const ins=await db.from("videos").insert({title:$("videoTitle").value.trim(),drama:dramaTitle,description:$("videoDescription").value.trim(),storage_path:path,mime_type:"video/mp4",size_bytes:file.size,created_by:user.id});
     if(ins.error){await db.storage.from("goc-nho-videos").remove([path]);status.textContent="Không lưu được thông tin video: "+ins.error.message;}
     else{videoForm.reset();status.textContent="Đã tải video lên kho chung.";await loadContent();}
     btn.disabled=false;
@@ -323,7 +332,7 @@ function setupNavigation(){
 }
 (async function init(){
   addAuthUI();setupNavigation();setupForms();
-  $("videoUploader").querySelector("p").textContent="Tải MP4 lên kho lưu trữ Supabase. Video sẽ phát được trên các thiết bị khác.";
+  $("videoUploader").querySelector("p").textContent="Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch và phát được trên các thiết bị khác.";
   $("novelShelf").querySelector("p").textContent="Tạo tiểu thuyết, đính kèm PDF/EPUB/TXT và đăng chương. Dữ liệu được chia sẻ trên website.";
   const {data:{session}}=await db.auth.getSession();
   await syncAuth();
