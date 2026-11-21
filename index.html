@@ -57,6 +57,14 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 .video-actions button{border:1px solid var(--line);background:var(--paper2);color:var(--ink);border-radius:99px;padding:7px 10px;font:12px "EB Garamond",Georgia,serif}
 @media(max-width:520px){.upload-grid{grid-template-columns:1fr}.upload-grid .field.full{grid-column:auto}}
 
+
+/* Mở chương đọc rộng toàn hàng, không bị bó trong cột card */
+#publicNovelList{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:start}
+#publicNovelList article.card:has(details[open]){grid-column:1/-1;width:100%;max-width:none}
+#publicNovelList article.card:has(details[open]) .cardbody{width:100%;max-width:none;box-sizing:border-box}
+#publicNovelList article.card details[open]{width:100%;max-width:none;box-sizing:border-box}
+#publicNovelList article.card details[open]>div{width:100%;max-width:none;box-sizing:border-box;padding:18px 24px!important;font-size:17px;line-height:2}
+@media(max-width:600px){#publicNovelList article.card details[open]>div{padding:12px 4px!important;font-size:16px}}
 </style>
 </head>
 <body>
