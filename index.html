@@ -135,193 +135,200 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 <footer>GÓC NHỎ CỦA CÁ · MỘT CHIẾC KỆ NHỎ DÀNH CHO NHỮNG CÂU CHUYỆN</footer>
 </div>
 <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const starter = [
- {id:"sample-1",title:"Một ngày dịu dàng",author:"Cá",genre:"Tình cảm · Đời thường",episodes:"Đang cập nhật",year:"2026",description:"Một chiếc kịch mẫu để minh họa cách trình bày thư viện. Cá có thể thay nội dung, ảnh bìa và link nghe trong mục Quản lý.",coverUrl:"",links:[{label:"Link nghe mẫu — thay bằng link của bạn",url:"https://www.youtube.com/"}]},
- {id:"sample-2",title:"Chuyện kể bên hiên",author:"Đang cập nhật",genre:"Thanh xuân · Chữa lành",episodes:"Đang cập nhật",year:"2026",description:"Thêm lời giới thiệu bộ kịch tại đây. Khi có link nghe thật, hãy cập nhật trong trang Quản lý.",coverUrl:"",links:[]}
-];
-let dramas = load();
-let activeGenre="Tất cả";
-const $=id=>document.getElementById(id);
-function load(){try{const v=JSON.parse(localStorage.getItem("gocNhoCuaCa")||"null");return Array.isArray(v)?v:starter}catch{return starter}}
-function save(){localStorage.setItem("gocNhoCuaCa",JSON.stringify(dramas))}
-function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function cover(d,cls="cover"){if(d.coverUrl){return `<div class="${cls}" style="background:linear-gradient(#46372d33,#46372d55),url('${esc(d.coverUrl)}') center/cover"> <div class="cover-inner"><small>AUDIO DRAMA</small><strong>${esc(d.title)}</strong></div></div>`}return `<div class="${cls}"><div class="cover-inner"><small>AUDIO DRAMA</small><strong>${esc(d.title)}</strong></div></div>`}
-function genres(){let g=["Tất cả",...new Set(dramas.map(d=>d.genre).filter(Boolean))];$("filters").innerHTML=g.map(x=>`<button class="chip ${activeGenre===x?"active":""}" data-genre="${esc(x)}">${esc(x)}</button>`).join("")}
-function render(){
- genres();const q=$("search").value.toLocaleLowerCase("vi");
- const rows=dramas.filter(d=>(activeGenre==="Tất cả"||d.genre===activeGenre)&&[d.title,d.author,d.genre].join(" ").toLocaleLowerCase("vi").includes(q));
- $("list").innerHTML=rows.map(d=>`<article class="card">${cover(d)}<div class="cardbody"><div class="genre">${esc(d.genre||"Kịch truyền thanh")}</div><h3>${esc(d.title)}</h3><div class="byline">Tác giả: ${esc(d.author||"Đang cập nhật")}</div><div class="cardfoot"><span class="tiny">${esc(d.episodes||"Chưa cập nhật")} · ${esc(d.year||"")}</span><button class="open" data-open="${esc(d.id)}">Khám phá →</button></div></div></article>`).join("");
- $("empty").style.display=rows.length?"none":"block";$("total").textContent=`${dramas.length} bộ kịch`;
-}
-function showDetail(id){const d=dramas.find(x=>x.id===id);if(!d)return;
- $("catalog").style.display="none";$("adminPanel").style.display="none";$("detail").style.display="block";
- $("detailContent").innerHTML=`<div class="detailhead">${cover(d,"detailcover")}<div class="detailcopy"><div class="genre">${esc(d.genre||"Kịch truyền thanh")}</div><h2>${esc(d.title)}</h2><div class="byline">Tác giả: ${esc(d.author||"Đang cập nhật")}</div><div class="meta"><span>🎧 ${esc(d.episodes||"Chưa cập nhật")}</span><span>✧ ${esc(d.year||"")}</span></div><p>${esc(d.description||"Chưa có phần giới thiệu.")}</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>${(d.links||[]).length?d.links.map(l=>`<div class="episode"><span>${esc(l.label)}</span><a href="${safeLink(l.url)}" target="_blank" rel="noopener noreferrer">Mở link nghe ↗</a></div>`).join(""):'<p class="byline">Chưa có link nghe cho bộ kịch này.</p>'}</div>`;
- window.scrollTo({top:0,behavior:"smooth"});
-}
-function safeLink(s){try{let u=new URL(s);return ["https:","http:"].includes(u.protocol)?esc(u.href):"#"}catch{return "#"}}
-function home(){ $("detail").style.display="none";$("adminPanel").style.display="none";$("catalog").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}
-function manage(){ $("detail").style.display="none";$("catalog").style.display="block";$("adminPanel").style.display=$("adminPanel").style.display==="block"?"none":"block";renderManage();$("adminPanel").scrollIntoView({behavior:"smooth",block:"start"})}
-function renderManage(){$("manageList").innerHTML=dramas.map(d=>`<div class="episode"><span><b>${esc(d.title)}</b> <span class="tiny">— ${esc(d.author||"")}</span></span><span><button class="btn" data-edit="${esc(d.id)}">Sửa</button> <button class="btn" data-delete="${esc(d.id)}">Xóa</button></span></div>`).join("")}
-function clearForm(){$("dramaForm").reset();$("editId").value=""}
-$("list").addEventListener("click",e=>{let b=e.target.closest("[data-open]");if(b)showDetail(b.dataset.open)});
-$("filters").addEventListener("click",e=>{let b=e.target.closest("[data-genre]");if(b){activeGenre=b.dataset.genre;render()}});
-$("search").addEventListener("input",render);$("backBtn").onclick=home;$("homeBtn").onclick=home;$("adminBtn").onclick=manage;
-$("clearForm").onclick=clearForm;
-$("dramaForm").addEventListener("submit",e=>{e.preventDefault();const id=$("editId").value||"drama-"+Date.now();const links=$("links").value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{let p=x.split("|");return {label:(p[0]||"Nghe kịch").trim(),url:(p.slice(1).join("|")||"").trim()}}).filter(x=>x.url);
-const item={id,title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),coverUrl:$("coverUrl").value.trim(),description:$("description").value.trim(),links};
-const i=dramas.findIndex(x=>x.id===id);if(i>=0)dramas[i]=item;else dramas.unshift(item);save();clearForm();render();renderManage();alert("Đã lưu trong trình duyệt này.");});
-$("manageList").addEventListener("click",e=>{let edit=e.target.closest("[data-edit]"),del=e.target.closest("[data-delete]");if(edit){let d=dramas.find(x=>x.id===edit.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author;$("genre").value=d.genre;$("episodesText").value=d.episodes;$("year").value=d.year;$("coverUrl").value=d.coverUrl||"";$("description").value=d.description||"";$("links").value=(d.links||[]).map(l=>`${l.label} | ${l.url}`).join("\n");$("dramaForm").scrollIntoView({behavior:"smooth"})}if(del&&confirm("Xóa bộ kịch này khỏi danh sách trên thiết bị?")){dramas=dramas.filter(x=>x.id!==del.dataset.delete);save();render();renderManage()}});
-render();
+/* Góc Nhỏ Của Cá — Supabase app */
+const SUPABASE_URL = "https://anoqryahkgjgvsdoxehk.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_HxoUu9LwxsuHLcCsgnFNJA_5EzxK7jN";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = (id) => document.getElementById(id);
+const esc = (s="") => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeLink = (s) => { try { const u = new URL(s); return ["https:","http:"].includes(u.protocol) ? esc(u.href) : "#"; } catch { return "#"; } };
+let user = null, role = "viewer", dramas = [], videos = [], novels = [], activeGenre = "Tất cả", currentDrama = null;
 
-// Kho MP4 cục bộ dùng IndexedDB — hoạt động không cần server.
-const VIDEO_DB = "GocNhoCuaCaVideoDB";
-const VIDEO_STORE = "videos";
-let videoObjectUrls = [];
-function openVideoDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(VIDEO_DB,2);
-    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(VIDEO_STORE))db.createObjectStore(VIDEO_STORE,{keyPath:"id"}); if(!db.objectStoreNames.contains("novels"))db.createObjectStore("novels",{keyPath:"id"});};
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+function addAuthUI() {
+  const actions = document.querySelector(".nav-actions");
+  if (actions && !$("accountBtn")) {
+    const b = document.createElement("button"); b.className = "btn"; b.id = "accountBtn"; b.textContent = "Đăng nhập"; actions.prepend(b);
+    b.onclick = () => user ? signOut() : openAuth();
+  }
+  const modal = document.createElement("div");
+  modal.id = "authModal";
+  modal.style.cssText = "display:none;position:fixed;inset:0;background:#21170dcc;z-index:1000;align-items:center;justify-content:center;padding:18px";
+  modal.innerHTML = '<form id="authForm" style="width:min(420px,100%);background:#fffaf2;border:1px solid #e4d7c6;border-radius:20px;padding:24px;box-shadow:0 20px 70px #0005;color:#46372d"><h2 style="font-weight:normal;margin:0 0 8px">Đăng nhập Góc Nhỏ Của Cá</h2><p style="color:#8b7969;font:14px Arial,sans-serif">Dùng email và mật khẩu đã đăng ký trong Supabase.</p><label style="display:block;margin:14px 0 5px">Email</label><input id="authEmail" type="email" required autocomplete="username" style="width:100%;padding:12px;border:1px solid #e4d7c6;border-radius:10px"><label style="display:block;margin:14px 0 5px">Mật khẩu</label><input id="authPassword" type="password" required autocomplete="current-password" style="width:100%;padding:12px;border:1px solid #e4d7c6;border-radius:10px"><p id="authMessage" aria-live="polite" style="font:13px Arial,sans-serif;color:#9b7054"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn" id="authCancel">Đóng</button><button type="submit" class="btn primary" id="authSubmit">Đăng nhập</button></div></form>';
+  document.body.appendChild(modal);
+  $("authCancel").onclick = () => modal.style.display = "none";
+  modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = "none"; });
+  $("authForm").addEventListener("submit", async e => {
+    e.preventDefault(); $("authSubmit").disabled = true; $("authMessage").textContent = "Đang kiểm tra tài khoản...";
+    const { error } = await db.auth.signInWithPassword({ email: $("authEmail").value.trim(), password: $("authPassword").value });
+    $("authSubmit").disabled = false;
+    if (error) { $("authMessage").textContent = "Không đăng nhập được: " + error.message; return; }
+    modal.style.display = "none"; await syncAuth();
   });
 }
-async function videoDB(action, value){
-  const db=await openVideoDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(VIDEO_STORE, action==="getAll"?"readonly":"readwrite");
-    const store=tx.objectStore(VIDEO_STORE);
-    let req;
-    if(action==="getAll") req=store.getAll();
-    else if(action==="put") req=store.put(value);
-    else req=store.delete(value);
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
-    tx.oncomplete=()=>db.close();tx.onerror=()=>reject(tx.error);
+function openAuth() { $("authModal").style.display = "flex"; $("authMessage").textContent = ""; }
+async function signOut() { await db.auth.signOut(); await syncAuth(); }
+async function syncAuth() {
+  const { data } = await db.auth.getSession(); user = data.session?.user || null; role = "viewer";
+  if (user) {
+    const { data: p, error } = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (p?.role) role = p.role;
+    else if (error) console.warn("Không đọc được vai trò:", error.message);
+  }
+  const b = $("accountBtn");
+  if (b) b.textContent = user ? (role === "admin" ? "Admin · Đăng xuất" : role === "uploader" ? "Uploader · Đăng xuất" : "Tài khoản · Đăng xuất") : "Đăng nhập";
+  const staff = !!user && ["admin","uploader"].includes(role);
+  $("adminPanel").style.display = "none";
+  $("videoUploader").style.display = staff ? "block" : "none";
+  $("novelShelf").style.display = staff ? "block" : "none";
+  $("adminBtn").textContent = staff ? "Quản lý" : "Đăng nhập";
+  if (!staff) $("roleManager")?.remove();
+  else if (role === "admin") renderRoleManager();
+  await loadContent();
+}
+function notice(msg) { window.alert(msg); }
+function cover(d, cls="cover") {
+  const style = d.cover_url ? ' style="background:linear-gradient(#46372d33,#46372d55),url(\''+esc(d.cover_url)+'\') center/cover"' : "";
+  return '<div class="'+cls+'"'+style+'><div class="cover-inner"><small>AUDIO DRAMA</small><strong>'+esc(d.title)+'</strong></div></div>';
+}
+function genres() {
+  const all = ["Tất cả", ...new Set(dramas.map(d => d.genre).filter(Boolean))];
+  $("filters").innerHTML = all.map(x => '<button class="chip '+(activeGenre===x?"active":"")+'" data-genre="'+esc(x)+'">'+esc(x)+'</button>').join("");
+}
+function render() {
+  genres(); const q = $("search").value.toLocaleLowerCase("vi");
+  const rows = dramas.filter(d => (activeGenre==="Tất cả" || d.genre===activeGenre) && [d.title,d.author,d.genre].join(" ").toLocaleLowerCase("vi").includes(q));
+  $("list").innerHTML = rows.map(d => '<article class="card">'+cover(d)+'<div class="cardbody"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h3>'+esc(d.title)+'</h3><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="cardfoot"><span class="tiny">'+esc(d.episodes||"Chưa cập nhật")+' · '+esc(d.year||"")+'</span><button class="open" data-open="'+esc(d.id)+'">Khám phá →</button></div></div></article>').join("");
+  $("empty").style.display = rows.length ? "none" : "block"; $("total").textContent = dramas.length+" bộ kịch";
+}
+function showDetail(id) {
+  const d = dramas.find(x => x.id===id); if (!d) return; currentDrama = id;
+  $("catalog").style.display = "none"; $("adminPanel").style.display = "none"; $("detail").style.display = "block";
+  const links = Array.isArray(d.links) ? d.links : [];
+  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p>'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link nghe ↗</a></div>').join(""):'<p class="byline">Chưa có link nghe cho bộ kịch này.</p>')+'</div>';
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function home() { $("detail").style.display="none"; $("adminPanel").style.display="none"; $("catalog").style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function manage() {
+  if (!user || !["admin","uploader"].includes(role)) { openAuth(); return; }
+  $("detail").style.display="none"; $("catalog").style.display="block";
+  $("adminPanel").style.display = $("adminPanel").style.display==="block" ? "none" : "block";
+  renderManage(); $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function renderManage() {
+  $("manageList").innerHTML = dramas.map(d => '<div class="episode"><span><b>'+esc(d.title)+'</b> <span class="tiny">— '+esc(d.author||"")+'</span></span><span><button class="btn" data-edit="'+esc(d.id)+'">Sửa</button> <button class="btn" data-delete="'+esc(d.id)+'">Xóa</button></span></div>').join("") || '<p class="tiny">Chưa có bộ kịch.</p>';
+}
+async function loadContent() {
+  const [dr, vi, no] = await Promise.all([
+    db.from("dramas").select("*").order("created_at",{ascending:false}),
+    db.from("videos").select("*").order("created_at",{ascending:false}),
+    db.from("novels").select("*").order("created_at",{ascending:false})
+  ]);
+  if (dr.error) console.error("Tải dramas:",dr.error.message); else dramas = dr.data || [];
+  if (vi.error) console.error("Tải videos:",vi.error.message); else videos = vi.data || [];
+  if (no.error) console.error("Tải novels:",no.error.message); else novels = no.data || [];
+  render(); renderManage(); await renderVideoLibrary(); await renderNovelLibrary();
+}
+function cloneForm(id) { const old=$(id), fresh=old.cloneNode(true); old.replaceWith(fresh); return fresh; }
+function setupForms() {
+  const dramaForm = cloneForm("dramaForm");
+  dramaForm.addEventListener("submit", async e => {
+    e.preventDefault(); if (!user || !["admin","uploader"].includes(role)) return openAuth();
+    const id=$("editId").value;
+    const links=$("links").value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return {label:(p[0]||"Nghe kịch").trim(),url:(p.slice(1).join("|")||"").trim()};}).filter(x=>x.url);
+    const item={title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:$("coverUrl").value.trim()||null,description:$("description").value.trim(),links,created_by:user.id};
+    const result = id ? await db.from("dramas").update(item).eq("id",id) : await db.from("dramas").insert(item);
+    if(result.error) return notice("Không lưu được: "+result.error.message);
+    dramaForm.reset(); $("editId").value=""; await loadContent(); notice("Đã lưu bộ kịch lên thư viện chung.");
+  });
+  $("clearForm").onclick=()=>{dramaForm.reset();$("editId").value="";};
+  $("manageList").addEventListener("click",async e=>{
+    const ed=e.target.closest("[data-edit]"), del=e.target.closest("[data-delete]");
+    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverUrl").value=d.cover_url||"";$("description").value=d.description||"";$("links").value=(d.links||[]).map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
+    if(del && role==="admin" && confirm("Xóa bộ kịch này khỏi thư viện chung?")){const {error}=await db.from("dramas").delete().eq("id",del.dataset.delete);if(error)notice(error.message);else await loadContent();}
+  });
+  const videoForm=cloneForm("videoForm");
+  videoForm.addEventListener("submit",async e=>{
+    e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
+    const file=$("videoFile").files[0],status=$("uploadStatus"),btn=$("uploadButton");if(!file)return;
+    if(file.type!=="video/mp4"&&!file.name.toLowerCase().endsWith(".mp4")){status.textContent="Vui lòng chọn file MP4.";return;}
+    if(file.size>500*1024*1024){status.textContent="Video vượt quá 500 MB.";return;}
+    btn.disabled=true;status.textContent="Đang tải video lên Supabase...";
+    const path=user.id+"/"+Date.now()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const up=await db.storage.from("goc-nho-videos").upload(path,file,{contentType:"video/mp4",upsert:false});
+    if(up.error){status.textContent="Tải lên thất bại: "+up.error.message;btn.disabled=false;return;}
+    const ins=await db.from("videos").insert({title:$("videoTitle").value.trim(),drama:$("videoDrama").value.trim(),description:$("videoDescription").value.trim(),storage_path:path,mime_type:"video/mp4",size_bytes:file.size,created_by:user.id});
+    if(ins.error){await db.storage.from("goc-nho-videos").remove([path]);status.textContent="Không lưu được thông tin video: "+ins.error.message;}
+    else{videoForm.reset();status.textContent="Đã tải video lên kho chung.";await loadContent();}
+    btn.disabled=false;
+  });
+  $("videoLibrary").addEventListener("click",async e=>{const b=e.target.closest("[data-delete-video]");if(!b||role!=="admin")return;if(!confirm("Xóa video khỏi kho chung?"))return;const v=videos.find(x=>x.id===b.dataset.deleteVideo);if(!v)return;const a=await db.storage.from("goc-nho-videos").remove([v.storage_path]);if(a.error)return notice(a.error.message);const d=await db.from("videos").delete().eq("id",v.id);if(d.error)notice(d.error.message);await loadContent();});
+  const novelForm=cloneForm("novelForm");
+  novelForm.addEventListener("submit",async e=>{
+    e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
+    const file=$("novelFile").files[0],status=$("novelUploadStatus"),btn=$("novelUploadButton");let attachment_path=null,attachment_name=null;
+    if(file){const ext=file.name.split(".").pop().toLowerCase();if(!["pdf","epub","txt"].includes(ext)){status.textContent="Chỉ nhận PDF, EPUB hoặc TXT.";return;}if(file.size>100*1024*1024){status.textContent="File vượt quá 100 MB.";return;}const path=user.id+"/"+Date.now()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const up=await db.storage.from("goc-nho-books").upload(path,file,{contentType:file.type||"application/octet-stream"});if(up.error){status.textContent="Tải file thất bại: "+up.error.message;return;}attachment_path=path;attachment_name=file.name;}
+    btn.disabled=true;const result=await db.from("novels").insert({title:$("novelTitle").value.trim(),author:$("novelAuthor").value.trim(),genre:$("novelGenre").value.trim(),cover_url:$("novelCover").value.trim()||null,description:$("novelDescription").value.trim(),attachment_path,attachment_name,created_by:user.id});
+    if(result.error){if(attachment_path)await db.storage.from("goc-nho-books").remove([attachment_path]);status.textContent="Không lưu được truyện: "+result.error.message;}
+    else{novelForm.reset();status.textContent="Đã thêm tiểu thuyết vào kệ chung.";await loadContent();}btn.disabled=false;
+  });
+  $("novelLibrary").addEventListener("submit",async e=>{
+    const form=e.target.closest(".chapter-form");if(!form)return;e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
+    const title=form.elements.chapterTitle.value.trim(),file=form.elements.chapterDocx.files[0],status=form.querySelector(".chapter-status");let content=form.elements.chapterContent.value.trim();
+    if(file){if(!window.mammoth){status.textContent="Không tải được bộ đọc Word.";return;}try{const r=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});content=r.value.trim();}catch{status.textContent="Không đọc được file Word.";return;}}
+    if(!content){status.textContent="Hãy nhập nội dung hoặc chọn file Word.";return;}
+    const {data:existing,error:readErr}=await db.from("chapters").select("chapter_number").eq("novel_id",form.dataset.bookId).order("chapter_number",{ascending:false}).limit(1);
+    if(readErr){status.textContent=readErr.message;return;}
+    const n=(existing?.[0]?.chapter_number||0)+1;
+    const {error}=await db.from("chapters").insert({novel_id:form.dataset.bookId,chapter_number:n,title,content,created_by:user.id});
+    if(error)status.textContent=error.message;else await loadContent();
+  });
+  $("novelLibrary").addEventListener("click",async e=>{
+    const c=e.target.closest("[data-delete-chapter]"),b=e.target.closest("[data-delete-novel]");
+    if(c&&role==="admin"&&confirm("Xóa chương này?")){const {error}=await db.from("chapters").delete().eq("id",c.dataset.deleteChapter);if(error)notice(error.message);await loadContent();}
+    if(b&&role==="admin"&&confirm("Xóa tiểu thuyết này và các chương?")){const {error}=await db.from("novels").delete().eq("id",b.dataset.deleteNovel);if(error)notice(error.message);await loadContent();}
   });
 }
-function safeVideoText(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 async function renderVideoLibrary(){
-  const host=document.getElementById("videoLibrary"); if(!host)return;
-  videoObjectUrls.forEach(URL.revokeObjectURL);videoObjectUrls=[];
-  try{
-    const videos=await videoDB("getAll");
-    if(!videos.length){host.innerHTML='<p class="tiny">Chưa có clip nào. Hãy tải MP4 đầu tiên của Cá nhé.</p>';return;}
-    host.innerHTML=videos.sort((a,b)=>b.created-a.created).map(v=>{
-      const url=URL.createObjectURL(v.file);videoObjectUrls.push(url);
-      return `<article class="video-item"><video controls preload="metadata" playsinline src="${url}"></video><h3>${safeVideoText(v.title)}</h3><p>${safeVideoText(v.drama||"")}${v.description?" · "+safeVideoText(v.description):""}</p><div class="video-actions"><button data-delete-video="${v.id}">Xóa clip</button></div></article>`;
-    }).join("");
-  }catch(err){host.innerHTML='<p class="tiny">Không thể đọc kho video. Trình duyệt có thể không hỗ trợ IndexedDB.</p>';}
+  const host=$("videoLibrary");if(!host)return;
+  if(!videos.length){host.innerHTML='<p class="tiny">Chưa có video nào trong kho chung.</p>';return;}
+  host.innerHTML=videos.map(v=>{const url=db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;return '<article class="video-item"><video controls preload="metadata" playsinline src="'+esc(url)+'"></video><h3>'+esc(v.title)+'</h3><p>'+esc(v.drama||"")+' · '+esc(v.description||"")+'</p>'+(role==="admin"?'<div class="video-actions"><button data-delete-video="'+esc(v.id)+'">Xóa video</button></div>':"")+'</article>';}).join("");
 }
-document.getElementById("videoForm")?.addEventListener("submit",async e=>{
-  e.preventDefault();
-  const file=document.getElementById("videoFile").files[0];
-  const status=document.getElementById("uploadStatus");
-  const btn=document.getElementById("uploadButton");
-  if(!file)return;
-  if(file.type!=="video/mp4"&&!file.name.toLowerCase().endsWith(".mp4")){status.textContent="Vui lòng chọn file MP4.";return;}
-  // Giới hạn mềm để tránh treo trình duyệt; dung lượng thực tế còn tùy thiết bị.
-  if(file.size>500*1024*1024){status.textContent="Clip lớn hơn 500 MB. Hãy nén clip hoặc dùng lưu trữ máy chủ.";return;}
-  btn.disabled=true;status.textContent="Đang lưu clip...";
-  try{
-    await videoDB("put",{id:"vid-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),title:document.getElementById("videoTitle").value.trim(),drama:document.getElementById("videoDrama").value.trim(),description:document.getElementById("videoDescription").value.trim(),file,created:Date.now()});
-    e.target.reset();status.textContent="Đã lưu clip trên thiết bị này.";await renderVideoLibrary();
-  }catch(err){status.textContent="Lưu thất bại. Có thể bộ nhớ trình duyệt không đủ.";console.error(err);}
-  finally{btn.disabled=false;}
-});
-document.getElementById("videoLibrary")?.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-delete-video]");if(!b)return;
-  if(confirm("Xóa clip này khỏi kho trên thiết bị?")){await videoDB("delete",b.dataset.deleteVideo);await renderVideoLibrary();}
-});
-renderVideoLibrary();
-
-
-// Kệ tiểu thuyết: lưu file PDF / EPUB / TXT trong IndexedDB trên thiết bị hiện tại.
-async function novelDB(action, value){
-  const db=await openVideoDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction("novels", action==="getAll"?"readonly":"readwrite");
-    const store=tx.objectStore("novels");
-    let req;
-    if(action==="getAll") req=store.getAll();
-    else if(action==="put") req=store.put(value);
-    else req=store.delete(value);
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
-    tx.oncomplete=()=>db.close();tx.onerror=()=>reject(tx.error);
-  });
-}
-function novelSafe(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function novelSize(n){return n<1024*1024?(n/1024).toFixed(0)+" KB":(n/1024/1024).toFixed(1)+" MB";}
 async function renderNovelLibrary(){
-  const host=document.getElementById("novelLibrary");if(!host)return;
-  try{
-    const books=await novelDB("getAll");
-    if(!books.length){host.innerHTML='<p class="tiny">Kệ tiểu thuyết vẫn còn trống. Tạo cuốn đầu tiên rồi thêm chương nhé.</p>';return;}
-    host.innerHTML=books.sort((a,b)=>b.created-a.created).map(b=>{
-      const url=b.file?URL.createObjectURL(b.file):"";
-      const isPdf=b.file&&(b.file.type==="application/pdf"||b.file.name.toLowerCase().endsWith(".pdf"));
-      const chapters=b.chapters||[];
-      const cover=b.cover?`<div class="cover" style="height:150px;background:linear-gradient(#46372d33,#46372d55),url('${novelSafe(b.cover)}') center/cover"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>${novelSafe(b.title)}</strong></div></div>`:`<div class="cover" style="height:150px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>${novelSafe(b.title)}</strong></div></div>`;
-      const chapterList=chapters.length?chapters.map((c,i)=>`<details style="border-top:1px solid var(--line);padding:10px 0"><summary style="cursor:pointer">${novelSafe(c.title||("Chương "+(i+1)))}</summary><div style="white-space:pre-wrap;line-height:1.9;padding:12px 4px">${novelSafe(c.content||"")}</div><div class="video-actions"><button data-delete-chapter="${b.id}" data-chapter-index="${i}">Xóa chương</button></div></details>`).join(""):'<p class="tiny">Chưa có chương nào.</p>';
-      return `<article class="video-item">${cover}<h3>${novelSafe(b.title)}</h3><p>${novelSafe(b.author||"Chưa rõ tác giả")} · ${novelSafe(b.genre||"Chưa phân loại")}</p><p>${novelSafe(b.description||"")}</p><p>${chapters.length} chương${b.file?" · "+novelSafe(b.file.name)+" · "+novelSize(b.file.size):""}</p>${b.file?`<div class="video-actions"><a class="btn" style="text-decoration:none;display:inline-block" href="${url}" target="_blank" rel="noopener">Mở ${isPdf?"PDF":"tệp"} ↗</a><a class="btn" style="text-decoration:none;display:inline-block" href="${url}" download="${novelSafe(b.file.name)}">Tải file</a></div>`:""}<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Đăng / quản lý chương</summary><form class="chapter-form" data-book-id="${b.id}" style="padding:12px 0"><div class="field"><label>Tên chương</label><input name="chapterTitle" placeholder="Ví dụ: Chương 1 – Gặp gỡ" required></div><div class="field" style="margin-top:8px"><label>Gõ nội dung chương</label><textarea name="chapterContent" rows="8" placeholder="Nhập nội dung chương tại đây..."></textarea></div><div class="field" style="margin-top:8px"><label>Hoặc nhập từ file Word (.docx)</label><input name="chapterDocx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div><button class="btn primary" type="submit" style="margin-top:10px">Lưu chương</button><span class="tiny chapter-status" aria-live="polite"></span></form><h4>Danh sách chương</h4>${chapterList}</details><div class="video-actions" style="margin-top:12px"><button data-delete-novel="${b.id}">Xóa truyện</button></div></article>`;
-    }).join("");
-  }catch(err){host.innerHTML='<p class="tiny">Không thể đọc kệ tiểu thuyết trên trình duyệt này.</p>';}
+  const host=$("novelLibrary");if(!host)return;
+  if(!novels.length){host.innerHTML='<p class="tiny">Kệ tiểu thuyết vẫn còn trống.</p>';return;}
+  const chapterResults=await db.from("chapters").select("*").order("chapter_number",{ascending:true});
+  const chapters=chapterResults.data||[];
+  host.innerHTML=novels.map(b=>{
+    const own=chapters.filter(c=>c.novel_id===b.id);
+    const coverHtml=b.cover_url?'<div class="cover" style="height:150px;background:linear-gradient(#46372d33,#46372d55),url(\''+esc(b.cover_url)+'\') center/cover"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>':'<div class="cover" style="height:150px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>';
+    const fileUrl=b.attachment_path?db.storage.from("goc-nho-books").getPublicUrl(b.attachment_path).data.publicUrl:"";
+    return '<article class="video-item">'+coverHtml+'<h3>'+esc(b.title)+'</h3><p>'+esc(b.author||"Chưa rõ tác giả")+' · '+esc(b.genre||"Chưa phân loại")+'</p><p>'+esc(b.description||"")+'</p>'+(fileUrl?'<p><a href="'+esc(fileUrl)+'" target="_blank" rel="noopener">Mở '+esc(b.attachment_name||"tệp đính kèm")+' ↗</a></p>':"")+'<details style="margin-top:14px"><summary style="cursor:pointer">Danh sách chương ('+own.length+')</summary>'+own.map(c=>'<details style="border-top:1px solid var(--line);padding:10px 0"><summary>'+esc(c.title)+'</summary><div style="white-space:pre-wrap;line-height:1.9;padding:12px 4px">'+esc(c.content)+'</div>'+(role==="admin"?'<button data-delete-chapter="'+esc(c.id)+'" class="btn">Xóa chương</button>':"")+'</details>').join("")+(user&&["admin","uploader"].includes(role)?'<form class="chapter-form" data-book-id="'+esc(b.id)+'" style="padding:12px 0"><div class="field"><label>Tên chương</label><input name="chapterTitle" required placeholder="Chương 1"></div><div class="field" style="margin-top:8px"><label>Nội dung chương</label><textarea name="chapterContent" rows="7"></textarea></div><div class="field" style="margin-top:8px"><label>Hoặc file Word (.docx)</label><input name="chapterDocx" type="file" accept=".docx"></div><button class="btn primary" type="submit" style="margin-top:10px">Lưu chương</button><span class="tiny chapter-status"></span></form>':"")+'</details>'+(role==="admin"?'<div class="video-actions"><button data-delete-novel="'+esc(b.id)+'">Xóa truyện</button></div>':"")+'</article>';
+  }).join("");
 }
-document.getElementById("novelForm")?.addEventListener("submit",async e=>{
-  e.preventDefault();
-  const file=document.getElementById("novelFile").files[0],status=document.getElementById("novelUploadStatus"),btn=document.getElementById("novelUploadButton");
-  if(file){
-    const ext=file.name.split(".").pop().toLowerCase();
-    if(!["pdf","epub","txt"].includes(ext)){status.textContent="File đính kèm chỉ nhận PDF, EPUB hoặc TXT.";return;}
-    if(file.size>100*1024*1024){status.textContent="File lớn hơn 100 MB. Hãy chọn file nhỏ hơn.";return;}
-  }
-  btn.disabled=true;status.textContent="Đang lưu tiểu thuyết...";
-  try{
-    await novelDB("put",{id:"novel-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),title:document.getElementById("novelTitle").value.trim(),author:document.getElementById("novelAuthor").value.trim(),genre:document.getElementById("novelGenre").value.trim(),cover:document.getElementById("novelCover").value.trim(),description:document.getElementById("novelDescription").value.trim(),file:file||null,chapters:[],created:Date.now()});
-    e.target.reset();status.textContent="Đã thêm tiểu thuyết vào kệ trên thiết bị này.";await renderNovelLibrary();
-  }catch(err){status.textContent="Lưu thất bại. Bộ nhớ trình duyệt có thể không đủ.";}
-  finally{btn.disabled=false;}
-});
-
-// Đọc file Word .docx bằng Mammoth.js (cần Internet khi nhập file Word).
-document.getElementById("novelLibrary")?.addEventListener("submit",async e=>{
-  const form=e.target.closest(".chapter-form");if(!form)return;
-  e.preventDefault();
-  const status=form.querySelector(".chapter-status");
-  const title=form.elements.chapterTitle.value.trim();
-  let content=form.elements.chapterContent.value.trim();
-  const docx=form.elements.chapterDocx.files[0];
-  if(docx){
-    if(!docx.name.toLowerCase().endsWith(".docx")){status.textContent="Vui lòng chọn file .docx.";return;}
-    if(!window.mammoth){status.textContent="Chưa tải được bộ đọc Word. Kiểm tra Internet rồi thử lại.";return;}
-    try{
-      const arrayBuffer=await docx.arrayBuffer();
-      const result=await window.mammoth.extractRawText({arrayBuffer});
-      content=result.value.trim();
-    }catch(err){status.textContent="Không đọc được file Word này.";return;}
-  }
-  if(!content){status.textContent="Bà nhập nội dung hoặc chọn file Word nha.";return;}
-  try{
-    const books=await novelDB("getAll");
-    const book=books.find(x=>x.id===form.dataset.bookId);
-    if(!book){status.textContent="Không tìm thấy tiểu thuyết.";return;}
-    book.chapters=book.chapters||[];
-    book.chapters.push({title,content,created:Date.now()});
-    await novelDB("put",book);
-    await renderNovelLibrary();
-  }catch(err){status.textContent="Lưu chương chưa thành công.";}
-});
-document.getElementById("novelLibrary")?.addEventListener("click",async e=>{
-  const del=e.target.closest("[data-delete-chapter]");if(!del)return;
-  if(!confirm("Xóa chương này?"))return;
-  const books=await novelDB("getAll");
-  const book=books.find(x=>x.id===del.dataset.deleteChapter);
-  if(book){book.chapters=book.chapters||[];book.chapters.splice(Number(del.dataset.chapterIndex),1);await novelDB("put",book);await renderNovelLibrary();}
-});
-
-document.getElementById("novelLibrary")?.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-delete-novel]");if(!b)return;
-  if(confirm("Xóa tiểu thuyết này khỏi kệ trên thiết bị?")){await novelDB("delete",b.dataset.deleteNovel);await renderNovelLibrary();}
-});
-renderNovelLibrary();
-
+async function renderRoleManager(){
+  if(role!=="admin")return;
+  let host=$("roleManager");if(!host){host=document.createElement("section");host.id="roleManager";host.className="upload-box";$("adminPanel").appendChild(host);}
+  const {data,error}=await db.from("profiles").select("*").order("created_at",{ascending:true});
+  if(error){host.innerHTML="<h3>Quản lý tài khoản</h3><p>"+esc(error.message)+"</p>";return;}
+  host.innerHTML='<h3 style="font-weight:normal">Quản lý tài khoản & phân quyền</h3><p>Admin có toàn quyền; Uploader được đăng nội dung; Viewer chỉ xem.</p>'+(data||[]).map(p=>'<div class="episode"><span>'+esc(p.email||p.id)+'</span><select data-role-user="'+esc(p.id)+'" class="btn"><option value="viewer" '+(p.role==="viewer"?"selected":"")+'>Viewer</option><option value="uploader" '+(p.role==="uploader"?"selected":"")+'>Uploader</option><option value="admin" '+(p.role==="admin"?"selected":"")+'>Admin</option></select></div>').join("");
+  host.onchange=async e=>{const s=e.target.closest("[data-role-user]");if(!s)return;if(s.dataset.roleUser===user.id&&s.value!=="admin"){s.value="admin";return notice("Không thể tự hạ quyền Admin đang đăng nhập.");}const {error}=await db.from("profiles").update({role:s.value}).eq("id",s.dataset.roleUser);if(error){notice(error.message);await renderRoleManager();}else notice("Đã cập nhật vai trò.");};
+}
+function setupNavigation(){
+  $("list").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)showDetail(b.dataset.open);});
+  $("filters").addEventListener("click",e=>{const b=e.target.closest("[data-genre]");if(b){activeGenre=b.dataset.genre;render();}});
+  $("search").addEventListener("input",render);$("backBtn").onclick=home;$("homeBtn").onclick=home;$("adminBtn").onclick=manage;
+  $("adminPanel").querySelector("p").textContent="Nội dung được lưu trên Supabase và chia sẻ cho mọi khách truy cập. Quyền ghi được kiểm soát bằng tài khoản và chính sách RLS.";
+}
+(async function init(){
+  addAuthUI();setupNavigation();setupForms();
+  $("videoUploader").querySelector("p").textContent="Tải MP4 lên kho lưu trữ Supabase. Video sẽ phát được trên các thiết bị khác.";
+  $("novelShelf").querySelector("p").textContent="Tạo tiểu thuyết, đính kèm PDF/EPUB/TXT và đăng chương. Dữ liệu được chia sẻ trên website.";
+  const {data:{session}}=await db.auth.getSession();
+  await syncAuth();
+  db.auth.onAuthStateChange(()=>{setTimeout(syncAuth,0);});
+  if(!session) { $("adminPanel").style.display="none"; $("videoUploader").style.display="none"; $("novelShelf").style.display="none"; }
+})();
 </script>
 </body></html>
