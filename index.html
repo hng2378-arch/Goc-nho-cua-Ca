@@ -459,10 +459,19 @@ async function renderComments(){
  const {data,error}=await db.from("guestbook_comments").select("id,name,message,created_at").order("created_at",{ascending:false}).limit(100);
  if(error){host.innerHTML='<p class="tiny">Chưa tải được lời nhắn. Vui lòng thử tải lại trang.</p>';console.error("Tải lời nhắn:",error.message);return;}
  if(!data?.length){host.innerHTML='<p class="tiny">Chưa có lời nhắn nào. Hãy là người đầu tiên nhé!</p>';return;}
- host.innerHTML=data.map(c=>'<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p></article>').join("");
+ host.innerHTML=data.map(c=>'<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p>'+(role==="admin"?'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa lời nhắn</button></div>':"")+'</article>').join("");
 }
 function setupComments(){
  const form=$("commentForm");if(!form)return;
+ $("commentList").addEventListener("click",async e=>{
+  const btn=e.target.closest("[data-delete-comment]");
+  if(!btn||role!=="admin")return;
+  if(!confirm("Bà có chắc muốn xóa lời nhắn này không?"))return;
+  btn.disabled=true;
+  const {error}=await db.from("guestbook_comments").delete().eq("id",btn.dataset.deleteComment);
+  if(error){notice("Không xóa được lời nhắn: "+error.message);btn.disabled=false;return;}
+  await renderComments();
+ });
  form.addEventListener("submit",async e=>{
   e.preventDefault();
   const name=$("commentName").value.trim(),message=$("commentMessage").value.trim(),status=$("commentStatus"),button=$("commentSubmit");
