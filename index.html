@@ -284,14 +284,14 @@ function setupForms() {
   });
   $("novelLibrary").addEventListener("submit",async e=>{
     const form=e.target.closest(".chapter-form");if(!form)return;e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
-    const title=form.elements.chapterTitle.value.trim(),file=form.elements.chapterDocx.files[0],status=form.querySelector(".chapter-status");let content=form.elements.chapterContent.value.trim();
+    const title=form.elements.chapterTitle.value.trim(),file=form.elements.chapterDocx.files[0],status=form.querySelector(".chapter-status");status.textContent="Đang lưu chương...";let content=form.elements.chapterContent.value.trim();
     if(file){if(!window.mammoth){status.textContent="Không tải được bộ đọc Word.";return;}try{const r=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});content=r.value.trim();}catch{status.textContent="Không đọc được file Word.";return;}}
     if(!content){status.textContent="Hãy nhập nội dung hoặc chọn file Word.";return;}
     const {data:existing,error:readErr}=await db.from("chapters").select("chapter_number").eq("novel_id",form.dataset.bookId).order("chapter_number",{ascending:false}).limit(1);
     if(readErr){status.textContent=readErr.message;return;}
     const n=(existing?.[0]?.chapter_number||0)+1;
     const {error}=await db.from("chapters").insert({novel_id:form.dataset.bookId,chapter_number:n,title,content});
-    if(error)status.textContent=error.message;else await loadContent();
+    if(error)status.textContent="Lỗi lưu chương: "+error.message;else{status.textContent="Đã lưu chương thành công.";form.reset();await loadContent();}
   });
   $("novelLibrary").addEventListener("click",async e=>{
     const c=e.target.closest("[data-delete-chapter]"),b=e.target.closest("[data-delete-novel]");
