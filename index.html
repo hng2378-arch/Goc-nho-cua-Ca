@@ -65,6 +65,11 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 #publicNovelList article.card details[open]{width:100%;max-width:none;box-sizing:border-box}
 #publicNovelList article.card details[open]>div{width:100%;max-width:none;box-sizing:border-box;padding:18px 24px!important;font-size:17px;line-height:2}
 @media(max-width:600px){#publicNovelList article.card details[open]>div{padding:12px 4px!important;font-size:16px}}
+
+.toc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:13px 16px;margin:0 0 22px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.toc strong{font-size:16px;color:var(--accent);margin-right:4px}.toc a{display:inline-block;text-decoration:none;color:var(--ink);background:#f1e6d8;border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:14px}.toc a:hover{background:#e8d8c6}
+.public-captionfy{padding:20px}.public-captionfy .episode{font-size:15px}
+@media(max-width:520px){.toc{gap:7px;padding:11px}.toc strong{width:100%}.toc a{font-size:13px;padding:7px 10px}}
 </style>
 </head>
 <body>
@@ -75,12 +80,14 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
 <main>
+<nav class="toc" aria-label="Mục lục tổng"><strong>☰ Mục lục</strong><a href="#catalog">Thư viện kịch</a><a href="#gameshowCaptionfy">Captionfy Gameshow</a><a href="#publicNovelShelf">Kệ tiểu thuyết</a></nav>
 <section id="catalog">
  <div class="section-top"><div><h2>Thư viện của Cá</h2><p>Khám phá các câu chuyện, dự án phụ đề và kịch truyền thanh.</p></div><span class="tiny" id="total"></span></div>
  <div class="searchrow"><input id="search" type="search" placeholder="Tìm tên kịch, tác giả hoặc thể loại..."></div>
  <div class="filters" id="filters"></div>
  <div class="grid" id="list"></div><div class="empty" id="empty">Chưa tìm thấy bộ kịch phù hợp.</div>
 </section>
+<section id="gameshowCaptionfy" class="upload-box public-captionfy" style="margin-top:30px"><div class="section-top"><div><h2>Captionfy · Gameshow</h2><p>Tổng hợp các bản phụ đề Captionfy dành riêng cho gameshow.</p></div></div><div id="publicCaptionfyList"></div><p id="publicCaptionfyEmpty" class="empty" style="display:none">Chưa có link Captionfy gameshow nào được đăng.</p></section>
 <section id="publicNovelShelf" style="margin-top:34px">
  <div class="section-top"><div><h2>Kệ tiểu thuyết</h2><p>Những câu chuyện và chương mới được Cá chia sẻ.</p></div></div>
  <div id="publicNovelList" class="grid"></div>
@@ -100,7 +107,8 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
    <div class="field"><label for="year">Năm</label><input id="year" placeholder="2026"></div>
    <div class="field"><label for="coverUrl">Link ảnh bìa (nếu có)</label><input id="coverUrl" type="url" placeholder="https://..."></div>
    <div class="field full"><label for="description">Giới thiệu</label><textarea id="description"></textarea></div>
-   <div class="field full"><label for="links">Link nghe — mỗi dòng một link, theo dạng: Tên tập | URL</label><textarea id="links" placeholder="Tập 1 | https://...&#10;Tập 2 | https://..."></textarea></div>
+   <div class="field full"><label for="links">Link nghe kịch — mỗi dòng: Tên tập | URL</label><textarea id="links" placeholder="Tập 1 | https://...&#10;Tập 2 | https://..."></textarea></div>
+   <div class="field full"><label for="captionfyLinks">Link Captionfy (chỉ dành cho gameshow) — mỗi dòng: Tên gameshow / tập | URL</label><textarea id="captionfyLinks" placeholder="Gameshow ABC — Tập 1 | https://captionfy.io/...&#10;Gameshow ABC — Tập 2 | https://captionfy.io/..."></textarea></div>
   </div>
   <div class="admin-actions"><button class="btn primary" type="submit">Lưu bộ kịch</button><button class="btn" type="button" id="clearForm">Xóa nội dung form</button></div>
  </form>
@@ -217,13 +225,15 @@ function render() {
 function showDetail(id) {
   const d = dramas.find(x => x.id===id); if (!d) return; currentDrama = id;
   $("catalog").style.display = "none"; $("adminPanel").style.display = "none"; $("detail").style.display = "block";
-  const links = Array.isArray(d.links) ? d.links : [];
+  const allLinks = Array.isArray(d.links) ? d.links : [];
+  const links = allLinks.filter(l => l.type !== "captionfy");
+  const captionfyLinks = allLinks.filter(l => l.type === "captionfy");
   const dramaVideos = videos.filter(v => (v.drama || "").trim() === (d.title || "").trim());
   const videoEpisodes = dramaVideos.map(v => {
     const url = db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;
     return '<div class="episode" style="display:block"><div style="margin-bottom:9px"><b>'+esc(v.title)+'</b></div><video controls preload="metadata" playsinline style="width:100%;max-height:420px;background:#211a16;border-radius:12px" src="'+esc(url)+'"></video>'+(v.description?'<p class="byline">'+esc(v.description)+'</p>':"")+'</div>';
   }).join("");
-  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p>'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(videoEpisodes || "")+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link ↗</a></div>').join(""):"")+(videoEpisodes || links.length ? "" : '<p class="byline">Bộ kịch chưa có tập video hoặc link nghe.</p>')+'</div>';
+  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p>'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(videoEpisodes || "")+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link ↗</a></div>').join(""):"")+(videoEpisodes || links.length ? "" : '<p class="byline">Bộ kịch chưa có tập video hoặc link nghe.</p>')+(captionfyLinks.length?'<h3 style="margin-top:28px">Link Captionfy · Gameshow</h3>'+captionfyLinks.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở Captionfy ↗</a></div>').join(""):"")+'</div>';
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function home() { $("detail").style.display="none"; $("adminPanel").style.display="none"; $("catalog").style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
@@ -251,7 +261,7 @@ async function loadContent() {
   if (dr.error) console.error("Tải dramas:",dr.error.message); else dramas = dr.data || [];
   if (vi.error) console.error("Tải videos:",vi.error.message); else videos = vi.data || [];
   if (no.error) console.error("Tải novels:",no.error.message); else novels = no.data || [];
-  render(); renderManage(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
+  render(); renderManage(); renderPublicCaptionfy(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
 }
 function cloneForm(id) { const old=$(id), fresh=old.cloneNode(true); old.replaceWith(fresh); return fresh; }
 function setupForms() {
@@ -259,7 +269,8 @@ function setupForms() {
   dramaForm.addEventListener("submit", async e => {
     e.preventDefault(); if (!user || !["admin","uploader"].includes(role)) return openAuth();
     const id=$("editId").value;
-    const links=$("links").value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return {label:(p[0]||"Nghe kịch").trim(),url:(p.slice(1).join("|")||"").trim()};}).filter(x=>x.url);
+    const parseLinkLines=(value,type)=>value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return {label:(p[0]||"Mở liên kết").trim(),url:(p.slice(1).join("|")||"").trim(),...(type?{type}: {})};}).filter(x=>x.url);
+    const links=[...parseLinkLines($("links").value),...parseLinkLines($("captionfyLinks").value,"captionfy")];
     const item={title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:$("coverUrl").value.trim()||null,description:$("description").value.trim(),links,created_by:user.id};
     const result = id ? await db.from("dramas").update(item).eq("id",id) : await db.from("dramas").insert(item);
     if(result.error) return notice("Không lưu được: "+result.error.message);
@@ -268,7 +279,7 @@ function setupForms() {
   $("clearForm").onclick=()=>{dramaForm.reset();$("editId").value="";};
   $("manageList").addEventListener("click",async e=>{
     const ed=e.target.closest("[data-edit]"), del=e.target.closest("[data-delete]");
-    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverUrl").value=d.cover_url||"";$("description").value=d.description||"";$("links").value=(d.links||[]).map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
+    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverUrl").value=d.cover_url||"";$("description").value=d.description||"";$("links").value=(d.links||[]).filter(l=>l.type!=="captionfy").map(l=>l.label+" | "+l.url).join("\n");$("captionfyLinks").value=(d.links||[]).filter(l=>l.type==="captionfy").map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
     if(del && role==="admin" && confirm("Xóa bộ kịch này khỏi thư viện chung?")){const {error}=await db.from("dramas").delete().eq("id",del.dataset.delete);if(error)notice(error.message);else await loadContent();}
   });
   const videoForm=cloneForm("videoForm");
@@ -317,6 +328,14 @@ async function renderVideoLibrary(){
   const host=$("videoLibrary");if(!host)return;
   if(!videos.length){host.innerHTML='<p class="tiny">Chưa có video nào trong kho chung.</p>';return;}
   host.innerHTML=videos.map(v=>{const url=db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;return '<article class="video-item"><video controls preload="metadata" playsinline src="'+esc(url)+'"></video><h3>'+esc(v.title)+'</h3><p>'+esc(v.drama||"")+' · '+esc(v.description||"")+'</p>'+(role==="admin"?'<div class="video-actions"><button data-delete-video="'+esc(v.id)+'">Xóa video</button></div>':"")+'</article>';}).join("");
+}
+
+function renderPublicCaptionfy(){
+  const host=$("publicCaptionfyList"),empty=$("publicCaptionfyEmpty");if(!host)return;
+  const rows=dramas.flatMap(d=>(Array.isArray(d.links)?d.links:[]).filter(l=>l.type==="captionfy").map(l=>({drama:d.title,label:l.label,url:l.url})));
+  if(!rows.length){host.innerHTML="";empty.style.display="block";return;}
+  empty.style.display="none";
+  host.innerHTML=rows.map(l=>'<div class="episode"><span><b>'+esc(l.drama)+'</b> · '+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở Captionfy ↗</a></div>').join("");
 }
 async function renderPublicNovelShelf(){
   const host=$("publicNovelList"),empty=$("publicNovelEmpty");if(!host)return;
