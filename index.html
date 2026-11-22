@@ -278,7 +278,7 @@ async function syncAuth() {
 function notice(msg) { window.alert(msg); }
 function cover(d, cls="cover") {
   const style = d.cover_url ? ' style="background:linear-gradient(#46372d33,#46372d55),url(\''+esc(d.cover_url)+'\') center/cover"' : "";
-  return '<div class="'+cls+'"'+style+'><div class="cover-inner"><small>AUDIO DRAMA</small><strong>'+esc(d.title)+'</strong></div></div>';
+  return '<div class="'+cls+'"'+style+'><div class="cover-inner"><small>'+esc(d.genre||"AUDIO DRAMA")+'</small><strong>'+esc(d.title)+'</strong></div></div>';
 }
 function genres() {
   const all = ["Tất cả", ...new Set(dramas.map(d => d.genre).filter(Boolean))];
