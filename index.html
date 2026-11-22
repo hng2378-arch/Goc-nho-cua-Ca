@@ -134,7 +134,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
    <div class="field"><label for="genre">Thể loại</label><input id="genre" placeholder="Ví dụ: Hiện đại · Tình cảm"></div>
    <div class="field"><label for="episodesText">Số tập / tình trạng</label><input id="episodesText" placeholder="Ví dụ: 12 tập · Hoàn"></div>
    <div class="field"><label for="year">Năm</label><input id="year" placeholder="2026"></div>
-   <div class="field"><label for="coverUrl">Link ảnh bìa (nếu có)</label><input id="coverUrl" type="url" placeholder="https://..."></div>
+   <div class="field"><label for="coverFile">Ảnh bìa (chọn từ thiết bị)</label><input id="coverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><small class="tiny">JPG, PNG, WEBP hoặc GIF · tối đa 10 MB. Không chọn ảnh mới nếu muốn giữ ảnh bìa hiện tại.</small><div id="coverPreview" class="tiny" style="margin-top:8px"></div></div>
    <div class="field full"><label for="description">Giới thiệu</label><textarea id="description"></textarea></div>
    <div class="field full"><label for="links">Link nghe kịch — mỗi dòng: Tên tập | URL</label><textarea id="links" placeholder="Tập 1 | https://...&#10;Tập 2 | https://..."></textarea></div>
    <div class="field full"><label for="captionfyLinks">Link Captionfy (chỉ dành cho gameshow) — mỗi dòng: Tên gameshow / tập | URL</label><textarea id="captionfyLinks" placeholder="Gameshow ABC — Tập 1 | https://captionfy.io/...&#10;Gameshow ABC — Tập 2 | https://captionfy.io/..."></textarea></div>
@@ -339,15 +339,27 @@ function setupForms() {
     const id=$("editId").value;
     const parseLinkLines=(value,type)=>value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return {label:(p[0]||"Mở liên kết").trim(),url:(p.slice(1).join("|")||"").trim(),...(type?{type}: {})};}).filter(x=>x.url);
     const links=[...parseLinkLines($("links").value),...parseLinkLines($("captionfyLinks").value,"captionfy")];
-    const item={title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:$("coverUrl").value.trim()||null,description:$("description").value.trim(),links,created_by:user.id};
+    let coverUrl = id ? (dramas.find(x=>x.id===id)?.cover_url || null) : null;
+    const coverFile = $("coverFile").files[0];
+    if(coverFile){
+      if(!["image/jpeg","image/png","image/webp","image/gif"].includes(coverFile.type)) return notice("Ảnh bìa chỉ nhận JPG, PNG, WEBP hoặc GIF.");
+      if(coverFile.size>10*1024*1024) return notice("Ảnh bìa vượt quá 10 MB.");
+      const safeName=coverFile.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+      const coverPath=user.id+"/covers/"+Date.now()+"-"+safeName;
+      const coverUpload=await db.storage.from("goc-nho-books").upload(coverPath,coverFile,{contentType:coverFile.type,upsert:false});
+      if(coverUpload.error) return notice("Tải ảnh bìa thất bại: "+coverUpload.error.message);
+      coverUrl=db.storage.from("goc-nho-books").getPublicUrl(coverPath).data.publicUrl;
+    }
+    const item={title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:coverUrl,description:$("description").value.trim(),links,created_by:user.id};
     const result = id ? await db.from("dramas").update(item).eq("id",id) : await db.from("dramas").insert(item);
     if(result.error) return notice("Không lưu được: "+result.error.message);
     dramaForm.reset(); $("editId").value=""; await loadContent(); notice("Đã lưu bộ kịch lên thư viện chung.");
   });
-  $("clearForm").onclick=()=>{dramaForm.reset();$("editId").value="";};
+  $("clearForm").onclick=()=>{dramaForm.reset();$("editId").value="";$("coverPreview").textContent="";};
+  $("coverFile").addEventListener("change",()=>{const f=$("coverFile").files[0];$("coverPreview").textContent=f?"Ảnh đã chọn: "+f.name:"";});
   $("manageList").addEventListener("click",async e=>{
     const ed=e.target.closest("[data-edit]"), del=e.target.closest("[data-delete]");
-    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverUrl").value=d.cover_url||"";$("description").value=d.description||"";$("links").value=(d.links||[]).filter(l=>l.type!=="captionfy").map(l=>l.label+" | "+l.url).join("\n");$("captionfyLinks").value=(d.links||[]).filter(l=>l.type==="captionfy").map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
+    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverFile").value="";$("coverPreview").textContent=d.cover_url?"Đang dùng ảnh bìa hiện tại. Chọn file mới nếu muốn thay ảnh.": "Chưa có ảnh bìa."; $("description").value=d.description||"";$("links").value=(d.links||[]).filter(l=>l.type!=="captionfy").map(l=>l.label+" | "+l.url).join("\n");$("captionfyLinks").value=(d.links||[]).filter(l=>l.type==="captionfy").map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
     if(del && role==="admin" && confirm("Xóa bộ kịch này khỏi thư viện chung?")){const {error}=await db.from("dramas").delete().eq("id",del.dataset.delete);if(error)notice(error.message);else await loadContent();}
   });
   const videoForm=cloneForm("videoForm");
