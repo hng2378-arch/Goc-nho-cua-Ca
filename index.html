@@ -34,7 +34,7 @@ main{padding-bottom:40px}.section-top{display:flex;justify-content:space-between
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:19px;overflow:hidden;box-shadow:var(--shadow);transition:.2s}.card:hover{transform:translateY(-4px)}
 .cover{height:190px;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;position:relative;overflow:hidden;color:#fffaf2;background:linear-gradient(135deg,#9a7860,#d0ad8d)}
 .cover:before,.cover:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.35);border-radius:50%;width:180px;height:180px}.cover:after{width:235px;height:235px}
-.cover .cover-inner{position:relative;z-index:1;text-shadow:0 2px 12px rgba(45,28,18,.25)}.cover small{display:block;font:11px "EB Garamond",Georgia,serif;letter-spacing:3px;margin-bottom:12px}.cover strong{font-size:26px;font-weight:normal}
+.cover .cover-inner{position:relative;z-index:1;text-shadow:0 2px 12px rgba(45,28,18,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}.cover .cover-genre{display:block;width:100%;font:11px "EB Garamond",Georgia,serif;letter-spacing:3px;line-height:1.5}.cover .cover-title{display:block;width:100%;font-size:26px;font-weight:normal;line-height:1.25}
 .cardbody{padding:16px}.genre{font:11px "EB Garamond",Georgia,serif;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}.card h3{font-size:20px;font-weight:normal;margin:8px 0}.byline{font:13px "EB Garamond",Georgia,serif;color:var(--muted)}.cardfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:17px}.tiny{font:12px "EB Garamond",Georgia,serif;color:var(--muted)}.open{border:0;background:var(--accent);color:white;border-radius:99px;padding:9px 13px;font:13px "EB Garamond",Georgia,serif}
 .empty{display:none;padding:35px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted);font:15px "EB Garamond",Georgia,serif}
 .detail{display:none}.back{margin:0 0 18px}.detailbox{background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow)}.detailhead{display:grid;grid-template-columns:.8fr 1.2fr;gap:26px;padding:24px}.detailcover{min-height:300px;border-radius:17px;display:grid;place-items:center;text-align:center;padding:25px;color:white;background:linear-gradient(135deg,#9a7860,#d0ad8d)}.detailcopy{align-self:center}.detailcopy h2{font-size:clamp(30px,5vw,43px);font-weight:normal;margin:12px 0}.detailcopy p{font:14px/1.8 Arial,sans-serif;color:var(--muted)}.meta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.meta span{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font:12px "EB Garamond",Georgia,serif;color:var(--muted)}
@@ -278,7 +278,7 @@ async function syncAuth() {
 function notice(msg) { window.alert(msg); }
 function cover(d, cls="cover") {
   const style = d.cover_url ? ' style="background:linear-gradient(#46372d33,#46372d55),url(\''+esc(d.cover_url)+'\') center/cover"' : "";
-  return '<div class="'+cls+'"'+style+'><div class="cover-inner"><small>'+esc(d.genre||"AUDIO DRAMA")+'</small><strong>'+esc(d.title)+'</strong></div></div>';
+  return '<div class="'+cls+'"'+style+'><div class="cover-inner"><div class="cover-genre">'+esc(d.genre||"AUDIO DRAMA")+'</div><div class="cover-title">'+esc(d.title)+'</div></div></div>';
 }
 function genres() {
   const all = ["Tất cả", ...new Set(dramas.map(d => d.genre).filter(Boolean))];
