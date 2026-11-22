@@ -309,7 +309,7 @@ function manage() {
   if (!user || !["admin","uploader"].includes(role)) { openAuth(); return; }
   $("detail").style.display="none"; $("catalog").style.display="block";
   $("adminPanel").style.display = $("adminPanel").style.display==="block" ? "none" : "block";
-  renderManage(); $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  renderManage(); saveManageSession(); $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderManage() {
   const dramaSelect = $("videoDrama");
@@ -546,7 +546,8 @@ function saveManageSession(){
       fields[el.id]=el.type==="checkbox"||el.type==="radio" ? el.checked : el.value;
     });
     sessionStorage.setItem(MANAGE_STATE_KEY,JSON.stringify({
-      manageOpen:panel?.style.display==="block",detailOpen:$("detail")?.style.display==="block",
+      manageOpen:!!panel && getComputedStyle(panel).display!=="none",
+      detailOpen:getComputedStyle($("detail")).display!=="none",
       currentDrama,scrollX:window.scrollX,scrollY:window.scrollY,fields
     }));
   }catch(e){}
@@ -557,23 +558,19 @@ function restoreManageSession(){
     const state=JSON.parse(raw);
     if(state.manageOpen && user && ["admin","uploader"].includes(role)){
       $("detail").style.display="none";$("catalog").style.display="block";$("adminPanel").style.display="block";
-      Object.entries(state.fields||{}).forEach(([id,value])=>{
-        const el=$(id);if(!el||el.type==="file"||el.type==="password")return;
-        if(el.type==="checkbox"||el.type==="radio")el.checked=!!value;else el.value=value;
-      });
       renderManage();
       Object.entries(state.fields||{}).forEach(([id,value])=>{
         const el=$(id);if(!el||el.type==="file"||el.type==="password")return;
         if(el.type==="checkbox"||el.type==="radio")el.checked=!!value;else el.value=value;
       });
+      requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({left:state.scrollX||0,top:state.scrollY||0,behavior:"auto"})));
     }else if(state.detailOpen&&state.currentDrama){showDetail(state.currentDrama);}
-    requestAnimationFrame(()=>window.scrollTo({left:state.scrollX||0,top:state.scrollY||0,behavior:"auto"}));
   }catch(e){}
 }
 document.addEventListener("input",e=>{if(e.target.closest("#adminPanel"))saveManageSession();});
 document.addEventListener("change",e=>{if(e.target.closest("#adminPanel"))saveManageSession();});
+window.addEventListener("scroll",()=>{if($("adminPanel")?.style.display==="block")saveManageSession();},{passive:true});
 window.addEventListener("pagehide",saveManageSession);
-window.addEventListener("pageshow",()=>setTimeout(restoreManageSession,250));
 (async function init(){
   addAuthUI();setupDisplayTools();setupNavigation();setupForms();setupComments();renderComments();
   $("videoUploader").querySelector("p").textContent="Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch và phát được trên các thiết bị khác.";
@@ -582,6 +579,7 @@ window.addEventListener("pageshow",()=>setTimeout(restoreManageSession,250));
   await syncAuth();
   db.auth.onAuthStateChange(()=>{setTimeout(syncAuth,0);});
   if(!session) { $("adminPanel").style.display="none"; $("videoUploader").style.display="none"; $("novelShelf").style.display="none"; }
+  restoreManageSession();
 })();
 </script>
 </body></html>
