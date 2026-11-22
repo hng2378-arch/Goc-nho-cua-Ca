@@ -536,6 +536,44 @@ function setupNavigation(){
   $("search").addEventListener("input",render);$("backBtn").onclick=home;$("homeBtn").onclick=home;$("adminBtn").onclick=manage;
   $("adminPanel").querySelector("p").textContent="Nội dung được lưu trên Supabase và chia sẻ cho mọi khách truy cập. Quyền ghi được kiểm soát bằng tài khoản và chính sách RLS.";
 }
+// Giữ nguyên khu vực quản lý, nội dung đang nhập và vị trí cuộn khi chuyển tab/ứng dụng.
+const MANAGE_STATE_KEY = "gocnho-manage-session-v1";
+function saveManageSession(){
+  try{
+    const panel=$("adminPanel"),fields={};
+    panel?.querySelectorAll("input,textarea,select").forEach(el=>{
+      if(!el.id || el.type==="file" || el.type==="password") return;
+      fields[el.id]=el.type==="checkbox"||el.type==="radio" ? el.checked : el.value;
+    });
+    sessionStorage.setItem(MANAGE_STATE_KEY,JSON.stringify({
+      manageOpen:panel?.style.display==="block",detailOpen:$("detail")?.style.display==="block",
+      currentDrama,scrollX:window.scrollX,scrollY:window.scrollY,fields
+    }));
+  }catch(e){}
+}
+function restoreManageSession(){
+  try{
+    const raw=sessionStorage.getItem(MANAGE_STATE_KEY);if(!raw)return;
+    const state=JSON.parse(raw);
+    if(state.manageOpen && user && ["admin","uploader"].includes(role)){
+      $("detail").style.display="none";$("catalog").style.display="block";$("adminPanel").style.display="block";
+      Object.entries(state.fields||{}).forEach(([id,value])=>{
+        const el=$(id);if(!el||el.type==="file"||el.type==="password")return;
+        if(el.type==="checkbox"||el.type==="radio")el.checked=!!value;else el.value=value;
+      });
+      renderManage();
+      Object.entries(state.fields||{}).forEach(([id,value])=>{
+        const el=$(id);if(!el||el.type==="file"||el.type==="password")return;
+        if(el.type==="checkbox"||el.type==="radio")el.checked=!!value;else el.value=value;
+      });
+    }else if(state.detailOpen&&state.currentDrama){showDetail(state.currentDrama);}
+    requestAnimationFrame(()=>window.scrollTo({left:state.scrollX||0,top:state.scrollY||0,behavior:"auto"}));
+  }catch(e){}
+}
+document.addEventListener("input",e=>{if(e.target.closest("#adminPanel"))saveManageSession();});
+document.addEventListener("change",e=>{if(e.target.closest("#adminPanel"))saveManageSession();});
+window.addEventListener("pagehide",saveManageSession);
+window.addEventListener("pageshow",()=>setTimeout(restoreManageSession,250));
 (async function init(){
   addAuthUI();setupDisplayTools();setupNavigation();setupForms();setupComments();renderComments();
   $("videoUploader").querySelector("p").textContent="Chọn bộ kịch đã tạo, sau đó tải MP4 của từng tập. Video sẽ xuất hiện trong trang chi tiết của bộ kịch và phát được trên các thiết bị khác.";
