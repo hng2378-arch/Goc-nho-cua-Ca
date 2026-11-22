@@ -131,6 +131,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
   <div class="formgrid">
    <div class="field"><label for="title">Tên bộ kịch *</label><input id="title" required></div>
    <div class="field"><label for="author">Tác giả</label><input id="author"></div>
+   <div class="field"><label for="translator">Người dịch</label><input id="translator" placeholder="Tên người dịch"></div>
    <div class="field"><label for="genre">Thể loại</label><input id="genre" placeholder="Ví dụ: Hiện đại · Tình cảm"></div>
    <div class="field"><label for="episodesText">Số tập / tình trạng</label><input id="episodesText" placeholder="Ví dụ: 12 tập · Hoàn"></div>
    <div class="field"><label for="year">Năm</label><input id="year" placeholder="2026"></div>
@@ -186,6 +187,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
     <div class="upload-grid">
       <div class="field"><label for="novelTitle">Tên tiểu thuyết *</label><input id="novelTitle" required placeholder="Tên truyện"></div>
       <div class="field"><label for="novelAuthor">Tác giả</label><input id="novelAuthor" placeholder="Tên tác giả"></div>
+      <div class="field"><label for="novelTranslator">Người dịch</label><input id="novelTranslator" placeholder="Tên người dịch"></div>
       <div class="field"><label for="novelGenre">Thể loại</label><input id="novelGenre" placeholder="Ví dụ: Ngôn tình · Hiện đại"></div>
       <div class="field"><label for="novelCover">Link ảnh bìa (không bắt buộc)</label><input id="novelCover" type="url" placeholder="https://..."></div>
       <div class="field full"><label for="novelDescription">Giới thiệu</label><textarea id="novelDescription" placeholder="Giới thiệu ngắn về tiểu thuyết..."></textarea></div>
@@ -287,7 +289,7 @@ function genres() {
 function render() {
   genres(); const q = $("search").value.toLocaleLowerCase("vi");
   const rows = dramas.filter(d => (activeGenre==="Tất cả" || d.genre===activeGenre) && [d.title,d.author,d.genre].join(" ").toLocaleLowerCase("vi").includes(q));
-  $("list").innerHTML = rows.map(d => '<article class="card">'+cover(d)+'<div class="cardbody"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h3>'+esc(d.title)+'</h3><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="cardfoot"><span class="tiny">'+esc(d.episodes||"Chưa cập nhật")+' · '+esc(d.year||"")+'</span><button class="open" data-open="'+esc(d.id)+'">Khám phá →</button></div></div></article>').join("");
+  $("list").innerHTML = rows.map(d => '<article class="card">'+cover(d)+'<div class="cardbody"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h3>'+esc(d.title)+'</h3><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div>'+(d.translator?'<div class="byline">Người dịch: '+esc(d.translator)+'</div>':"")+'<div class="cardfoot"><span class="tiny">'+esc(d.episodes||"Chưa cập nhật")+' · '+esc(d.year||"")+'</span><button class="open" data-open="'+esc(d.id)+'">Khám phá →</button></div></div></article>').join("");
   $("empty").style.display = rows.length ? "none" : "block"; $("total").textContent = dramas.length+" bộ kịch";
 }
 function showDetail(id) {
@@ -301,7 +303,7 @@ function showDetail(id) {
     const url = db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;
     return '<details class="episode" style="display:block"><summary style="cursor:pointer;font-weight:600">'+esc(v.title)+' <span class="tiny">· Bấm để xem tập</span></summary><video controls preload="metadata" playsinline style="width:100%;max-height:420px;background:#211a16;border-radius:12px;margin-top:12px" src="'+esc(url)+'"></video>'+(v.description?'<p class="byline">'+esc(v.description)+'</p>':"")+'</details>';
   }).join("");
-  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div><div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p style="white-space:pre-line">'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(videoEpisodes || "")+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link ↗</a></div>').join(""):"")+(videoEpisodes || links.length ? "" : '<p class="byline">Bộ kịch chưa có tập video hoặc link nghe.</p>')+(captionfyLinks.length?'<h3 style="margin-top:28px">Link Captionfy · Gameshow</h3>'+captionfyLinks.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở Captionfy ↗</a></div>').join(""):"")+'</div>';
+  $("detailContent").innerHTML = '<div class="detailhead">'+cover(d,"detailcover")+'<div class="detailcopy"><div class="genre">'+esc(d.genre||"Kịch truyền thanh")+'</div><h2>'+esc(d.title)+'</h2><div class="byline">Tác giả: '+esc(d.author||"Đang cập nhật")+'</div>'+(d.translator?'<div class="byline">Người dịch: '+esc(d.translator)+'</div>':"")+'<div class="meta"><span>🎧 '+esc(d.episodes||"Chưa cập nhật")+'</span><span>✧ '+esc(d.year||"")+'</span></div><p style="white-space:pre-line">'+esc(d.description||"Chưa có phần giới thiệu.")+'</p></div></div><div class="episodes"><h3>Danh sách tập & link nghe</h3>'+(videoEpisodes || "")+(links.length?links.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở link ↗</a></div>').join(""):"")+(videoEpisodes || links.length ? "" : '<p class="byline">Bộ kịch chưa có tập video hoặc link nghe.</p>')+(captionfyLinks.length?'<h3 style="margin-top:28px">Link Captionfy · Gameshow</h3>'+captionfyLinks.map(l=>'<div class="episode"><span>'+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở Captionfy ↗</a></div>').join(""):"")+'</div>';
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function home() { $("detail").style.display="none"; $("adminPanel").style.display="none"; $("catalog").style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
@@ -350,7 +352,7 @@ function setupForms() {
       if(coverUpload.error) return notice("Tải ảnh bìa thất bại: "+coverUpload.error.message);
       coverUrl=db.storage.from("goc-nho-books").getPublicUrl(coverPath).data.publicUrl;
     }
-    const item={title:$("title").value.trim(),author:$("author").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:coverUrl,description:$("description").value.trim(),links,created_by:user.id};
+    const item={title:$("title").value.trim(),author:$("author").value.trim(),translator:$("translator").value.trim(),genre:$("genre").value.trim(),episodes:$("episodesText").value.trim(),year:$("year").value.trim(),cover_url:coverUrl,description:$("description").value.trim(),links,created_by:user.id};
     const result = id ? await db.from("dramas").update(item).eq("id",id) : await db.from("dramas").insert(item);
     if(result.error) return notice("Không lưu được: "+result.error.message);
     dramaForm.reset(); $("editId").value=""; await loadContent(); notice("Đã lưu bộ kịch lên thư viện chung.");
@@ -359,7 +361,7 @@ function setupForms() {
   $("coverFile").addEventListener("change",()=>{const f=$("coverFile").files[0];$("coverPreview").textContent=f?"Ảnh đã chọn: "+f.name:"";});
   $("manageList").addEventListener("click",async e=>{
     const ed=e.target.closest("[data-edit]"), del=e.target.closest("[data-delete]");
-    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverFile").value="";$("coverPreview").textContent=d.cover_url?"Đang dùng ảnh bìa hiện tại. Chọn file mới nếu muốn thay ảnh.": "Chưa có ảnh bìa."; $("description").value=d.description||"";$("links").value=(d.links||[]).filter(l=>l.type!=="captionfy").map(l=>l.label+" | "+l.url).join("\n");$("captionfyLinks").value=(d.links||[]).filter(l=>l.type==="captionfy").map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
+    if(ed){const d=dramas.find(x=>x.id===ed.dataset.edit);if(!d)return;$("editId").value=d.id;$("title").value=d.title;$("author").value=d.author||"";$("translator").value=d.translator||"";$("genre").value=d.genre||"";$("episodesText").value=d.episodes||"";$("year").value=d.year||"";$("coverFile").value="";$("coverPreview").textContent=d.cover_url?"Đang dùng ảnh bìa hiện tại. Chọn file mới nếu muốn thay ảnh.": "Chưa có ảnh bìa."; $("description").value=d.description||"";$("links").value=(d.links||[]).filter(l=>l.type!=="captionfy").map(l=>l.label+" | "+l.url).join("\n");$("captionfyLinks").value=(d.links||[]).filter(l=>l.type==="captionfy").map(l=>l.label+" | "+l.url).join("\n");dramaForm.scrollIntoView({behavior:"smooth"});}
     if(del && role==="admin" && confirm("Xóa bộ kịch này khỏi thư viện chung?")){const {error}=await db.from("dramas").delete().eq("id",del.dataset.delete);if(error)notice(error.message);else await loadContent();}
   });
   const videoForm=cloneForm("videoForm");
@@ -389,7 +391,7 @@ function setupForms() {
     e.preventDefault();if(!user||!["admin","uploader"].includes(role))return openAuth();
     const file=$("novelFile").files[0],status=$("novelUploadStatus"),btn=$("novelUploadButton");let attachment_path=null,attachment_name=null;
     if(file){const ext=file.name.split(".").pop().toLowerCase();if(!["pdf","epub","txt"].includes(ext)){status.textContent="Chỉ nhận PDF, EPUB hoặc TXT.";return;}if(file.size>100*1024*1024){status.textContent="File vượt quá 100 MB.";return;}const path=user.id+"/"+Date.now()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const up=await db.storage.from("goc-nho-books").upload(path,file,{contentType:file.type||"application/octet-stream"});if(up.error){status.textContent="Tải file thất bại: "+up.error.message;return;}attachment_path=path;attachment_name=file.name;}
-    btn.disabled=true;const result=await db.from("novels").insert({title:$("novelTitle").value.trim(),author:$("novelAuthor").value.trim(),genre:$("novelGenre").value.trim(),cover_url:$("novelCover").value.trim()||null,description:$("novelDescription").value.trim(),attachment_path});
+    btn.disabled=true;const result=await db.from("novels").insert({title:$("novelTitle").value.trim(),author:$("novelAuthor").value.trim(),translator:$("novelTranslator").value.trim(),genre:$("novelGenre").value.trim(),cover_url:$("novelCover").value.trim()||null,description:$("novelDescription").value.trim(),attachment_path});
     if(result.error){if(attachment_path)await db.storage.from("goc-nho-books").remove([attachment_path]);status.textContent="Không lưu được truyện: "+result.error.message;}
     else{novelForm.reset();status.textContent="Đã thêm tiểu thuyết vào kệ chung.";await loadContent();}btn.disabled=false;
   });
@@ -439,7 +441,7 @@ async function renderPublicNovelShelf(){
     const cover='<div class="cover" style="height:170px"><div class="cover-inner"><small>TIỂU THUYẾT</small><strong>'+esc(b.title)+'</strong></div></div>';
     const file=b.attachment_path?'<p><a href="'+esc(db.storage.from("goc-nho-books").getPublicUrl(b.attachment_path).data.publicUrl)+'" target="_blank" rel="noopener">Mở sách đính kèm ↗</a></p>':"";
     const chapterHtml=own.length?'<details style="margin-top:12px"><summary>Danh sách chương ('+own.length+')</summary>'+own.map(c=>'<details style="padding:9px 0;border-top:1px solid var(--line)"><summary>'+esc(c.title||("Chương "+c.chapter_number))+'</summary><div style="white-space:pre-wrap;line-height:1.85;padding:10px 0">'+esc(c.content||"")+'</div></details>').join("")+'</details>':'<p class="tiny">Chưa có chương nào.</p>';
-    return '<article class="card">'+cover+'<div class="cardbody"><div class="genre">'+esc(b.genre||"Tiểu thuyết")+'</div><h3>'+esc(b.title)+'</h3><div class="byline">Tác giả: '+esc(b.author||"Đang cập nhật")+'</div><p>'+esc(b.description||"")+'</p>'+file+'<div class="tiny">'+own.length+' chương</div>'+chapterHtml+'</div></article>';
+    return '<article class="card">'+cover+'<div class="cardbody"><div class="genre">'+esc(b.genre||"Tiểu thuyết")+'</div><h3>'+esc(b.title)+'</h3><div class="byline">Tác giả: '+esc(b.author||"Đang cập nhật")+'</div>'+(b.translator?'<div class="byline">Người dịch: '+esc(b.translator)+'</div>':"")+'<p>'+esc(b.description||"")+'</p>'+file+'<div class="tiny">'+own.length+' chương</div>'+chapterHtml+'</div></article>';
   }).join("");
 }
 async function renderNovelLibrary(){
