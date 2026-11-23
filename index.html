@@ -312,7 +312,7 @@ async function loadContent() {
   if (dr.error) console.error("Tải dramas:",dr.error.message); else dramas = dr.data || [];
   if (vi.error) console.error("Tải videos:",vi.error.message); else videos = vi.data || [];
   if (no.error) console.error("Tải novels:",no.error.message); else novels = no.data || [];
-  render(); renderManage(); renderLinkManagers(); renderPublicCaptionfy(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
+  render(); renderManage(); renderPublicCaptionfy(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
 }
 function cloneForm(id) { const old=$(id), fresh=old.cloneNode(true); old.replaceWith(fresh); return fresh; }
 function setupForms() {
