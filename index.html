@@ -496,13 +496,15 @@ async function renderComments(){
  const replyRows=replies||[];
  host.innerHTML=data.map(c=>{
   const canDelete=role==="admin"||(!!user&&c.user_id===user.id);
+  const canEdit=!!user&&c.user_id===user.id;
   const child=replyRows.filter(r=>r.comment_id===c.id);
   const replyHtml=child.map(r=>{
    const canDeleteReply=role==="admin"||(!!user&&r.user_id===user.id);
-   return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(user&&r.user_id===user.id?"Cá nè":r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(r.message)+(canDeleteReply?'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button></div>':"")+'</div>';
+   const canEditReply=!!user&&r.user_id===user.id;
+   return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(user&&r.user_id===user.id?"Cá nè":r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(r.message)+(canDeleteReply||canEditReply?'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">'+(canEditReply?'<button class="btn" type="button" data-edit-reply="'+esc(r.id)+'">Chỉnh sửa</button>':"")+(canDeleteReply?'<button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button>':"")+'</div>':"")+'</div>';
   }).join("");
   const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" hidden><textarea name="reply" rows="2" placeholder="Viết câu trả lời..." style="width:100%"></textarea>'+guestbookStickerControls()+'<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
-  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(user&&c.user_id===user.id?"Cá nè":c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'<button class="btn" type="button" data-open-sticker="'+esc(c.id)+'">Nhãn dán</button></div>'+replyHtml+replyForm+'</article>';
+  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(user&&c.user_id===user.id?"Cá nè":c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button>'+(canEdit?'<button class="btn" type="button" data-edit-comment="'+esc(c.id)+'">Chỉnh sửa</button>':"")+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'<button class="btn" type="button" data-open-sticker="'+esc(c.id)+'">Nhãn dán</button></div>'+replyHtml+replyForm+'</article>';
  }).join("");
  setupGuestbookStickerEvents(host);
 }
@@ -516,6 +518,24 @@ function setupComments(){
    if(target){target.hidden=false;target.scrollIntoView({behavior:"smooth",block:"nearest"});if(openReply.hasAttribute("data-open-sticker")){const panel=target.querySelector("[data-sticker-panel]");const toggle=target.querySelector("[data-sticker-toggle]");if(panel?.hidden)toggle?.click();}else target.querySelector("textarea")?.focus();}
    else if(!user)notice("Đăng nhập để trả lời hoặc gửi nhãn dán nha.");
    return;
+  }
+  const editBtn=e.target.closest("[data-edit-comment],[data-edit-reply]");
+  if(editBtn){
+   const isReply=editBtn.hasAttribute("data-edit-reply");
+   const table=isReply?"guestbook_replies":"guestbook_comments";
+   const id=isReply?editBtn.dataset.editReply:editBtn.dataset.editComment;
+   const {data:row,error:readError}=await db.from(table).select("message,user_id").eq("id",id).maybeSingle();
+   if(readError||!row){notice("Không tải được nội dung để chỉnh sửa.");return;}
+   if(!user||row.user_id!==user.id){notice("Chỉ người đăng mới được chỉnh sửa nội dung này nha.");return;}
+   const parts=splitGuestbookSticker(row.message);
+   const updated=prompt("Chỉnh sửa lời nhắn (ảnh nhãn dán hiện tại sẽ được giữ nguyên):",parts.text);
+   if(updated===null)return;
+   if(!updated.trim()&&!parts.image&&!parts.sticker){notice("Lời nhắn không thể để trống nha.");return;}
+   const nextMessage=updated.trim()+(parts.image?"\n[[image:"+parts.image+"]]":parts.sticker?GUESTBOOK_STICKER_TOKEN:"");
+   editBtn.disabled=true;
+   const {error}=await db.from(table).update({message:nextMessage}).eq("id",id).eq("user_id",user.id);
+   if(error){notice("Chưa chỉnh sửa được: "+error.message);editBtn.disabled=false;return;}
+   await renderComments();return;
   }
   const btn=e.target.closest("[data-delete-comment],[data-delete-reply]");
   if(!btn)return;
