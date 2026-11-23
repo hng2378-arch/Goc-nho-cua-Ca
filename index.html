@@ -96,6 +96,18 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 @media(max-width:520px){.visitor-note{width:calc(100% - 20px);font-size:12px;padding:9px 10px}}
 
 .captionfy-note{margin:0 0 14px;padding:11px 14px;border-left:3px solid var(--accent);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:14px;line-height:1.6}
+
+/* Nhãn dán trong sổ lời nhắn */
+.sticker-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.sticker-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:9px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--paper2)}
+.sticker-option{border:2px solid transparent;border-radius:12px;background:var(--paper);padding:6px;display:grid;place-items:center}
+.sticker-option[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)}
+.sticker-option img,.comment-sticker{width:4.5cm;height:4.5cm;max-width:100%;object-fit:contain;display:block}
+.comment-sticker{margin-top:8px;border-radius:10px}
+.sticker-picked{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sticker-picked img{width:42px;height:42px;object-fit:contain}
+@media(max-width:520px){.sticker-picker{gap:8px}.sticker-option img{width:4.5cm;height:4.5cm}}
+
 </style>
 </head>
 <body>
@@ -187,7 +199,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
    <div class="field"><label for="commentName">Tên / biệt danh *</label><input id="commentName" maxlength="60" required placeholder="Bạn muốn được gọi là gì?"></div>
    <div class="field full"><label for="commentMessage">Lời nhắn của bạn *</label><textarea id="commentMessage" maxlength="1000" required placeholder="Viết lời nhắn dễ thương cho Góc Nhỏ Của Cá..."></textarea></div>
   </div>
-  <div class="admin-actions"><button class="btn primary" id="commentSubmit" type="submit">Gửi lời nhắn ♡</button><span id="commentStatus" class="tiny" aria-live="polite"></span></div>
+  <div class="sticker-tools"><button class="btn" type="button" data-sticker-toggle aria-expanded="false">♡ Nhãn dán</button><span class="sticker-picked" data-sticker-picked hidden></span></div><div class="sticker-picker" data-sticker-panel hidden><button class="sticker-option" type="button" data-sticker-select aria-label="Chọn nhãn dán cún xanh" aria-pressed="false"><img src="assets/sticker-cun-xanh.svg" alt="Cún xanh đang ra dấu im lặng"></button></div><div class="admin-actions"><button class="btn primary" id="commentSubmit" type="submit">Gửi lời nhắn ♡</button><span id="commentStatus" class="tiny" aria-live="polite"></span></div>
  </form>
  <h3 style="font-weight:normal;margin:24px 0 10px">Lời nhắn từ mọi người</h3>
  <div id="commentList" aria-live="polite"><p class="tiny">Đang tải lời nhắn...</p></div>
@@ -441,6 +453,44 @@ function setupDisplayTools(){
 }
 
 
+const GUESTBOOK_STICKER_TOKEN = "\n[[sticker:green-dog]]";
+const GUESTBOOK_STICKER_URL = "assets/sticker-cun-xanh.svg";
+function splitGuestbookSticker(raw=""){
+ const value=String(raw||"");
+ const hasSticker=value.endsWith(GUESTBOOK_STICKER_TOKEN);
+ return {text:hasSticker?value.slice(0,-GUESTBOOK_STICKER_TOKEN.length):value,sticker:hasSticker};
+}
+function saveGuestbookSticker(message,form){
+ return message+(form?.dataset.selectedSticker==="green-dog"?GUESTBOOK_STICKER_TOKEN:"");
+}
+function guestbookMessageHtml(raw){
+ const parsed=splitGuestbookSticker(raw);
+ return '<p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(parsed.text)+'</p>'+(parsed.sticker?'<img class="comment-sticker" src="'+GUESTBOOK_STICKER_URL+'" alt="Nhãn dán cún xanh">':"");
+}
+function guestbookStickerControls(){
+ return '<div class="sticker-tools"><button class="btn" type="button" data-sticker-toggle aria-expanded="false">♡ Nhãn dán</button><span class="sticker-picked" data-sticker-picked hidden></span></div><div class="sticker-picker" data-sticker-panel hidden><button class="sticker-option" type="button" data-sticker-select aria-label="Chọn nhãn dán cún xanh" aria-pressed="false"><img src="'+GUESTBOOK_STICKER_URL+'" alt="Cún xanh đang ra dấu im lặng"></button></div>';
+}
+function setupGuestbookStickerEvents(root){
+ if(!root||root.dataset.stickerEvents==="1")return;
+ root.dataset.stickerEvents="1";
+ root.addEventListener("click",e=>{
+  const toggle=e.target.closest("[data-sticker-toggle]");
+  if(toggle){
+   const form=toggle.closest("form");const panel=form?.querySelector("[data-sticker-panel]");
+   if(!panel)return;
+   panel.hidden=!panel.hidden;toggle.setAttribute("aria-expanded",String(!panel.hidden));return;
+  }
+  const select=e.target.closest("[data-sticker-select]");
+  if(select){
+   const form=select.closest("form");if(!form)return;
+   const active=form.dataset.selectedSticker==="green-dog";
+   if(active){delete form.dataset.selectedSticker;}else{form.dataset.selectedSticker="green-dog";}
+   select.setAttribute("aria-pressed",String(!active));
+   const picked=form.querySelector("[data-sticker-picked]");
+   if(picked){picked.hidden=active;picked.innerHTML=active?"":'<img src="'+GUESTBOOK_STICKER_URL+'" alt="">Đã chọn nhãn dán';}
+  }
+ });
+}
 async function renderComments(){
  const host=$("commentList");if(!host)return;
  host.innerHTML='<p class="tiny">Đang tải lời nhắn...</p>';
@@ -455,15 +505,24 @@ async function renderComments(){
   const child=replyRows.filter(r=>r.comment_id===c.id);
   const replyHtml=child.map(r=>{
    const canDeleteReply=role==="admin"||(!!user&&r.user_id===user.id);
-   return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0;line-height:1.6">'+esc(r.message)+'</p>'+(canDeleteReply?'<button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button>':"")+'</div>';
+   return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(r.message)+(canDeleteReply?'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button></div>':"")+'</div>';
   }).join("");
-  const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" style="margin:12px 0 0 16px"><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea><div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
-  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;line-height:1.65">'+esc(c.message)+'</p>'+(canDelete?'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa lời nhắn</button></div>':"")+replyHtml+replyForm+'</article>';
+  const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" style="margin:12px 0 0 16px"><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea>'+guestbookStickerControls()+'<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
+  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'</div>'+replyHtml+replyForm+'</article>';
  }).join("");
+ setupGuestbookStickerEvents(host);
 }
 function setupComments(){
  const form=$("commentForm");if(!form)return;
+ setupGuestbookStickerEvents(form);
  $("commentList").addEventListener("click",async e=>{
+  const openReply=e.target.closest("[data-open-reply]");
+  if(openReply){
+   const target=$("commentList").querySelector('[data-reply-form="'+CSS.escape(openReply.dataset.openReply)+'"]');
+   if(target){target.querySelector("textarea")?.focus();target.scrollIntoView({behavior:"smooth",block:"nearest"});}
+   else if(!user)notice("Đăng nhập để trả lời lời nhắn nha.");
+   return;
+  }
   const btn=e.target.closest("[data-delete-comment],[data-delete-reply]");
   if(!btn)return;
   const isReply=btn.hasAttribute("data-delete-reply");
@@ -480,24 +539,30 @@ function setupComments(){
   e.preventDefault();
   if(!user){notice("Bà đăng nhập để trả lời lời nhắn nha.");return;}
   const commentId=replyForm.dataset.replyForm,message=replyForm.elements.reply.value.trim();
-  const status=replyForm.querySelector("[data-reply-status]"),button=replyForm.querySelector("button");
-  if(!message)return;
+  const status=replyForm.querySelector("[data-reply-status]"),button=replyForm.querySelector('button[type="submit"]');
+  if(!message&&!replyForm.dataset.selectedSticker){status.textContent="Bà nhập lời nhắn hoặc chọn nhãn dán nha.";return;}
   button.disabled=true;status.textContent="Đang gửi trả lời...";
-  const {error}=await db.from("guestbook_replies").insert({comment_id:commentId,user_id:user.id,name:user.user_metadata?.display_name||user.email?.split("@")[0]||"Thành viên",message});
+  const savedMessage=saveGuestbookSticker(message,replyForm);
+  const {error}=await db.from("guestbook_replies").insert({comment_id:commentId,user_id:user.id,name:user.user_metadata?.display_name||user.email?.split("@")[0]||"Thành viên",message:savedMessage});
   if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
   await renderComments();
  });
  form.addEventListener("submit",async e=>{
   e.preventDefault();
   const name=$("commentName").value.trim(),message=$("commentMessage").value.trim(),status=$("commentStatus"),button=$("commentSubmit");
-  if(!name||!message){status.textContent="Bà điền tên và lời nhắn nha.";return;}
+  if(!name||(!message&&!form.dataset.selectedSticker)){status.textContent="Bà điền tên và lời nhắn hoặc chọn nhãn dán nha.";return;}
   button.disabled=true;status.textContent="Đang gửi lời nhắn...";
-  const {error}=await db.from("guestbook_comments").insert({name,message,...(user?{user_id:user.id}:{})});
+  const savedMessage=saveGuestbookSticker(message,form);
+  const {error}=await db.from("guestbook_comments").insert({name,message:savedMessage,...(user?{user_id:user.id}:{})});
   if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
-  form.reset();status.textContent="Đã gửi lời nhắn thành công. Cảm ơn bạn ♡";button.disabled=false;await renderComments();
+  form.reset();delete form.dataset.selectedSticker;
+  const picked=form.querySelector("[data-sticker-picked]");if(picked){picked.hidden=true;picked.innerHTML="";}
+  const panel=form.querySelector("[data-sticker-panel]");if(panel)panel.hidden=true;
+  const toggle=form.querySelector("[data-sticker-toggle]");if(toggle)toggle.setAttribute("aria-expanded","false");
+  const select=form.querySelector("[data-sticker-select]");if(select)select.setAttribute("aria-pressed","false");
+  status.textContent="Đã gửi lời nhắn thành công. Cảm ơn bạn ♡";button.disabled=false;await renderComments();
  });
 }
-
 function setupNavigation(){
   $("list").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)showDetail(b.dataset.open);});
   $("filters").addEventListener("click",e=>{const b=e.target.closest("[data-genre]");if(b){activeGenre=b.dataset.genre;render();}});
