@@ -268,7 +268,7 @@ async function syncAuth() {
   const staff = !!user && ["admin","uploader"].includes(role);
   $("adminPanel").style.display = "none";
   $("videoUploader").style.display = staff ? "block" : "none";
-  $("novelShelf").style.display = staff ? "block" : "none";
+  $("novelShelf").style.display = "none";
   $("adminBtn").textContent = staff ? "Quản lý" : "Đăng nhập";
   if (!staff) $("roleManager")?.remove();
   else if (role === "admin") renderRoleManager();
@@ -308,6 +308,7 @@ function manage() {
   if (!user || !["admin","uploader"].includes(role)) { openAuth(); return; }
   $("detail").style.display="none"; $("catalog").style.display="block";
   $("adminPanel").style.display = $("adminPanel").style.display==="block" ? "none" : "block";
+  $("novelShelf").style.display = $("adminPanel").style.display;
   renderManage(); saveManageSession(); $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderManage() {
@@ -556,7 +557,7 @@ function restoreManageSession(){
     const raw=sessionStorage.getItem(MANAGE_STATE_KEY);if(!raw)return;
     const state=JSON.parse(raw);
     if(state.manageOpen && user && ["admin","uploader"].includes(role)){
-      $("detail").style.display="none";$("catalog").style.display="block";$("adminPanel").style.display="block";
+      $("detail").style.display="none";$("catalog").style.display="block";$("adminPanel").style.display="block";$("novelShelf").style.display="block";
       renderManage();
       Object.entries(state.fields||{}).forEach(([id,value])=>{
         const el=$(id);if(!el||el.type==="file"||el.type==="password")return;
