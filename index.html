@@ -107,7 +107,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
 <main>
-<nav class="toc" aria-label="Mục lục tổng"><strong>☰ Mục lục</strong><a href="#catalog">Thư viện kịch</a><a href="#gameshowCaptionfy">Captionfy Gameshow</a><a href="#publicGameshowDrive">Gameshow · Drive</a><a href="#publicNovelShelf">Kệ tiểu thuyết</a><a href="#guestbook">Lời nhắn</a></nav>
+<nav class="toc" aria-label="Mục lục tổng"><strong>☰ Mục lục</strong><a href="#catalog">Thư viện kịch</a><a href="#gameshowCaptionfy">Captionfy · Google Drive Gameshow</a><a href="#publicNovelShelf">Kệ tiểu thuyết</a><a href="#guestbook">Lời nhắn</a></nav>
 <section id="catalog">
  <div class="section-top"><div><h2>Thư viện của Cá</h2><p>Khám phá các câu chuyện, dự án phụ đề và kịch truyền thanh.</p></div><span class="tiny" id="total"></span></div>
  <div class="searchrow"><input id="search" type="search" placeholder="Tìm tên kịch, tác giả hoặc thể loại..."></div>
@@ -115,8 +115,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <div class="grid" id="list"></div><div class="empty" id="empty">Chưa tìm thấy bộ kịch phù hợp.</div>
 </section>
 <section id="detail" class="detail"><button class="btn back" id="backBtn">← Trở về kệ truyện</button><article class="detailbox" id="detailContent"></article></section>
-<section id="gameshowCaptionfy" class="upload-box public-captionfy" style="margin-top:30px"><div class="section-top"><div><h2>Captionfy · Gameshow</h2><p>Tổng hợp các bản phụ đề Captionfy dành riêng cho gameshow.</p></div></div><p class="captionfy-note">Lưu ý: Vui lòng không tự tạo thêm file sub hay chỉnh bất kỳ gì trên trang Captionfy của sốp.</p><div id="publicCaptionfyList"></div><p id="publicCaptionfyEmpty" class="empty" style="display:none">Chưa có link Captionfy gameshow nào được đăng.</p></section>
-<section id="publicGameshowDrive" class="upload-box" style="margin-top:30px"><div class="section-top"><div><h2>Gameshow · Google Drive</h2><p>Tổng hợp link Drive của các gameshow.</p></div></div><div id="publicGameshowDriveList"></div><p id="publicGameshowDriveEmpty" class="empty" style="display:none">Chưa có link Drive gameshow nào được đăng.</p></section>
+<section id="gameshowCaptionfy" class="upload-box public-captionfy" style="margin-top:30px"><div class="section-top"><div><h2>Captionfy · Google Drive Gameshow</h2><p>Tổng hợp link phụ đề và Google Drive dành riêng cho gameshow.</p></div></div><p class="captionfy-note">Lưu ý: Vui lòng không tự tạo thêm file sub hay chỉnh bất kỳ gì trên trang Captionfy của sốp.</p><h3 style="font-weight:normal;margin:16px 0 8px">Link Captionfy</h3><div id="publicCaptionfyList"></div><p id="publicCaptionfyEmpty" class="empty" style="display:none">Chưa có link Captionfy gameshow nào được đăng.</p><h3 style="font-weight:normal;margin:22px 0 8px">Link Google Drive</h3><div id="publicGameshowDriveList"></div><p id="publicGameshowDriveEmpty" class="empty" style="display:none">Chưa có link Drive gameshow nào được đăng.</p></section>
 <section id="publicNovelShelf" style="margin-top:34px"><div class="section-top"><div><h2>Kệ tiểu thuyết</h2><p>Những câu chuyện và chương mới được Cá chia sẻ.</p></div></div><div id="publicNovelList" class="grid"></div><p id="publicNovelEmpty" class="empty" style="display:none">Chưa có tiểu thuyết nào được đăng.</p></section>
 
 
@@ -148,15 +147,15 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
    <div class="field full"><label for="captionfyUrl">Link Captionfy *</label><input id="captionfyUrl" type="url" required placeholder="https://..."></div>
   </div><div class="admin-actions"><button class="btn primary" type="submit">Thêm link Captionfy</button><span id="captionfyStatus" class="tiny"></span></div></form>
   <h3 style="font-weight:normal;margin:20px 0 8px">Link Captionfy đã đăng</h3><div id="captionfyManageList"></div>
- </section>
- <section class="upload-box" id="gameshowDriveManager">
-  <h2>Quản lý Gameshow · Google Drive</h2><p>Thêm link Google Drive cho từng gameshow.</p>
-  <form id="gameshowDriveForm"><div class="upload-grid">
-   <div class="field"><label for="driveDrama">Chọn gameshow *</label><select id="driveDrama"><option value="">— Không bắt buộc chọn gameshow —</option></select></div>
-   <div class="field"><label for="driveLabel">Tên tập / nội dung *</label><input id="driveLabel" required placeholder="Ví dụ: Tập 01"></div>
-   <div class="field full"><label for="driveUrl">Link Google Drive *</label><input id="driveUrl" type="url" required placeholder="https://drive.google.com/..."></div>
-  </div><div class="admin-actions"><button class="btn primary" type="submit">Thêm link Drive</button><span id="driveStatus" class="tiny"></span></div></form>
-  <h3 style="font-weight:normal;margin:20px 0 8px">Link Drive đã đăng</h3><div id="gameshowDriveManageList"></div>
+  <div style="border-top:1px solid var(--line);margin-top:22px;padding-top:18px">
+   <h2>Thêm link Google Drive</h2><p>Thêm link Drive cho từng gameshow ngay tại đây.</p>
+   <form id="gameshowDriveForm"><div class="upload-grid">
+    <div class="field"><label for="driveDrama">Chọn gameshow</label><select id="driveDrama"><option value="">— Chọn gameshow —</option></select></div>
+    <div class="field"><label for="driveLabel">Tên tập / nội dung *</label><input id="driveLabel" required placeholder="Ví dụ: Tập 01"></div>
+    <div class="field full"><label for="driveUrl">Link Google Drive *</label><input id="driveUrl" type="url" required placeholder="https://drive.google.com/..."></div>
+   </div><div class="admin-actions"><button class="btn primary" type="submit">Thêm link Drive</button><span id="driveStatus" class="tiny"></span></div></form>
+   <h3 style="font-weight:normal;margin:20px 0 8px">Link Google Drive đã đăng</h3><div id="gameshowDriveManageList"></div>
+  </div>
  </section>
 <section class="upload-box" id="videoUploader">
   <h2>Đăng tập video cho bộ kịch</h2>
