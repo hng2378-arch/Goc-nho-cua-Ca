@@ -97,17 +97,18 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 
 .captionfy-note{margin:0 0 14px;padding:11px 14px;border-left:3px solid var(--accent);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:14px;line-height:1.6}
 
-/* Nhãn dán trong sổ lời nhắn */
-.sticker-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
-.sticker-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:9px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--paper2)}
-.sticker-option{border:2px solid transparent;border-radius:12px;background:var(--paper);padding:6px;display:grid;place-items:center}
+/* Nhãn dán sổ lời nhắn — giao diện gọn */
+.sticker-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sticker-picker[hidden],[data-reply-form][hidden]{display:none!important}
+.sticker-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:max-content;max-width:100%;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--paper2)}
+.sticker-option{border:2px solid transparent;border-radius:10px;background:var(--paper);padding:4px;display:grid;place-items:center;cursor:pointer}
 .sticker-option[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)}
-.sticker-option img,.comment-sticker{width:4.5cm;height:4.5cm;max-width:100%;object-fit:contain;display:block}
-.comment-sticker{margin-top:8px;border-radius:10px}
-.sticker-picked{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.sticker-picked img{width:42px;height:42px;object-fit:contain}
-@media(max-width:520px){.sticker-picker{gap:8px}.sticker-option img{width:4.5cm;height:4.5cm}}
-
+.sticker-option img{width:64px;height:64px;object-fit:contain;display:block}
+.comment-sticker{width:4.5cm;height:4.5cm;max-width:100%;object-fit:contain;display:block;margin-top:8px;border-radius:10px}
+.sticker-picked{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}
+.sticker-picked img{width:30px;height:30px;object-fit:contain}
+[data-reply-form]{margin:12px 0 0 16px;padding:12px;border-radius:12px;background:var(--paper2)}
+[data-reply-form] textarea{width:100%}
 </style>
 </head>
 <body>
@@ -507,8 +508,8 @@ async function renderComments(){
    const canDeleteReply=role==="admin"||(!!user&&r.user_id===user.id);
    return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(r.message)+(canDeleteReply?'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button></div>':"")+'</div>';
   }).join("");
-  const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" style="margin:12px 0 0 16px"><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea>'+guestbookStickerControls()+'<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
-  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button><button class="btn" type="button" data-open-sticker="'+esc(c.id)+'">Nhãn dán</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'</div>'+replyHtml+replyForm+'</article>';
+  const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" hidden><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea>'+guestbookStickerControls()+'<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
+  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'<button class="btn" type="button" data-open-sticker="'+esc(c.id)+'">Nhãn dán</button></div>'+replyHtml+replyForm+'</article>';
  }).join("");
  setupGuestbookStickerEvents(host);
 }
@@ -519,7 +520,7 @@ function setupComments(){
   const openReply=e.target.closest("[data-open-reply],[data-open-sticker]");
   if(openReply){
    const target=$("commentList").querySelector('[data-reply-form="'+CSS.escape(openReply.dataset.openReply||openReply.dataset.openSticker)+'"]');
-   if(target){target.scrollIntoView({behavior:"smooth",block:"nearest"});if(openReply.hasAttribute("data-open-sticker")){const toggle=target.querySelector("[data-sticker-toggle]");if(toggle&&!target.querySelector("[data-sticker-panel]").hidden){}else toggle?.click();}else target.querySelector("textarea")?.focus();}
+   if(target){target.hidden=false;target.scrollIntoView({behavior:"smooth",block:"nearest"});if(openReply.hasAttribute("data-open-sticker")){const panel=target.querySelector("[data-sticker-panel]");const toggle=target.querySelector("[data-sticker-toggle]");if(panel?.hidden)toggle?.click();}else target.querySelector("textarea")?.focus();}
    else if(!user)notice("Đăng nhập để trả lời hoặc gửi nhãn dán nha.");
    return;
   }
