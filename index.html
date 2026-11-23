@@ -251,6 +251,7 @@ function addAuthUI() {
 }
 function openAuth() { $("authModal").style.display = "flex"; $("authMessage").textContent = ""; }
 async function signOut() { await db.auth.signOut(); await syncAuth(); }
+function guestbookDisplayName(){return user?"Cá nè":"Khách";}
 async function syncAuth() {
   const { data } = await db.auth.getSession(); user = data.session?.user || null; role = "viewer";
   if (user) {
@@ -261,6 +262,7 @@ async function syncAuth() {
   const b = $("accountBtn");
   if (b) b.textContent = user ? (role === "admin" ? "Admin · Đăng xuất" : role === "uploader" ? "Uploader · Đăng xuất" : "Tài khoản · Đăng xuất") : "Đăng nhập";
   const staff = !!user && ["admin","uploader"].includes(role);
+  const commentNameInput=$("commentName");if(commentNameInput&&user)commentNameInput.value="Cá nè";
   $("adminPanel").style.display = "none";
   $("videoUploader").style.display = staff ? "block" : "none";
   $("novelShelf").style.display = "none";
@@ -536,7 +538,7 @@ function setupComments(){
   button.disabled=true;status.textContent="Đang gửi trả lời...";
   let imageUrl="";try{imageUrl=await uploadGuestbookSticker(replyForm._selectedStickerFile);}catch(err){status.textContent=err.message;button.disabled=false;return;}
   const savedMessage=saveGuestbookSticker(message,imageUrl);
-  const {error}=await db.from("guestbook_replies").insert({comment_id:commentId,user_id:user.id,name:user.user_metadata?.display_name||user.email?.split("@")[0]||"Thành viên",message:savedMessage});
+  const {error}=await db.from("guestbook_replies").insert({comment_id:commentId,user_id:user.id,name:guestbookDisplayName(),message:savedMessage});
   if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
   await renderComments();
  });
@@ -547,7 +549,7 @@ function setupComments(){
   button.disabled=true;status.textContent="Đang gửi lời nhắn...";
   let imageUrl="";try{imageUrl=await uploadGuestbookSticker(form._selectedStickerFile);}catch(err){status.textContent=err.message;button.disabled=false;return;}
   const savedMessage=saveGuestbookSticker(message,imageUrl);
-  const {error}=await db.from("guestbook_comments").insert({name,message:savedMessage,...(user?{user_id:user.id}:{})});
+  const {error}=await db.from("guestbook_comments").insert({name:user?guestbookDisplayName():name,message:savedMessage,...(user?{user_id:user.id}:{})});
   if(error){status.textContent="Chưa gửi được: "+error.message;button.disabled=false;return;}
   form.reset();delete form._selectedStickerFile;
   const picked=form.querySelector("[data-sticker-picked]");if(picked){picked.hidden=true;picked.textContent="";}const preview=form.querySelector("[data-sticker-preview]");if(preview)preview.innerHTML="";
