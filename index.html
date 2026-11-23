@@ -508,7 +508,7 @@ async function renderComments(){
    return '<div style="margin:12px 0 0 16px;padding:12px;border-left:2px solid var(--accent,#b98b68)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(r.name)+'</b><span class="tiny">'+esc(new Date(r.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(r.message)+(canDeleteReply?'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn" type="button" data-delete-reply="'+esc(r.id)+'">Xóa trả lời</button></div>':"")+'</div>';
   }).join("");
   const replyForm=user?'<form data-reply-form="'+esc(c.id)+'" style="margin:12px 0 0 16px"><textarea name="reply" rows="2" required placeholder="Viết câu trả lời..." style="width:100%"></textarea>'+guestbookStickerControls()+'<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" type="submit">Trả lời</button></div><span class="tiny" data-reply-status="'+esc(c.id)+'"></span></form>':'<p class="tiny" style="margin:12px 0 0 16px">Đăng nhập để trả lời lời nhắn.</p>';
-  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'</div>'+replyHtml+replyForm+'</article>';
+  return '<article class="episode" style="display:block;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>'+esc(c.name)+'</b><span class="tiny">'+esc(new Date(c.created_at).toLocaleString("vi-VN",{dateStyle:"medium",timeStyle:"short"}))+'</span></div>'+guestbookMessageHtml(c.message)+'<div class="sticker-tools" style="justify-content:flex-end"><button class="btn" type="button" data-open-reply="'+esc(c.id)+'">Trả lời</button><button class="btn" type="button" data-open-sticker="'+esc(c.id)+'">Nhãn dán</button>'+(canDelete?'<button class="btn" type="button" data-delete-comment="'+esc(c.id)+'">Xóa</button>':"")+'</div>'+replyHtml+replyForm+'</article>';
  }).join("");
  setupGuestbookStickerEvents(host);
 }
@@ -516,11 +516,11 @@ function setupComments(){
  const form=$("commentForm");if(!form)return;
  setupGuestbookStickerEvents(form);
  $("commentList").addEventListener("click",async e=>{
-  const openReply=e.target.closest("[data-open-reply]");
+  const openReply=e.target.closest("[data-open-reply],[data-open-sticker]");
   if(openReply){
-   const target=$("commentList").querySelector('[data-reply-form="'+CSS.escape(openReply.dataset.openReply)+'"]');
-   if(target){target.querySelector("textarea")?.focus();target.scrollIntoView({behavior:"smooth",block:"nearest"});}
-   else if(!user)notice("Đăng nhập để trả lời lời nhắn nha.");
+   const target=$("commentList").querySelector('[data-reply-form="'+CSS.escape(openReply.dataset.openReply||openReply.dataset.openSticker)+'"]');
+   if(target){target.scrollIntoView({behavior:"smooth",block:"nearest"});if(openReply.hasAttribute("data-open-sticker")){const toggle=target.querySelector("[data-sticker-toggle]");if(toggle&&!target.querySelector("[data-sticker-panel]").hidden){}else toggle?.click();}else target.querySelector("textarea")?.focus();}
+   else if(!user)notice("Đăng nhập để trả lời hoặc gửi nhãn dán nha.");
    return;
   }
   const btn=e.target.closest("[data-delete-comment],[data-delete-reply]");
