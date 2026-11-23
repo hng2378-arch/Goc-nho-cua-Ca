@@ -115,7 +115,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <div class="grid" id="list"></div><div class="empty" id="empty">Chưa tìm thấy bộ kịch phù hợp.</div>
 </section>
 <section id="detail" class="detail"><button class="btn back" id="backBtn">← Trở về kệ truyện</button><article class="detailbox" id="detailContent"></article></section>
-<section id="gameshowCaptionfy" class="upload-box public-captionfy" style="margin-top:30px"><div class="section-top"><div><h2>Captionfy · Google Drive Gameshow</h2><p>Tổng hợp link phụ đề và Google Drive dành riêng cho gameshow.</p></div></div><p class="captionfy-note">Lưu ý: Vui lòng không tự tạo thêm file sub hay chỉnh bất kỳ gì trên trang Captionfy của sốp.</p><h3 style="font-weight:normal;margin:16px 0 8px">Link Captionfy</h3><div id="publicCaptionfyList"></div><p id="publicCaptionfyEmpty" class="empty" style="display:none">Chưa có link Captionfy gameshow nào được đăng.</p><h3 style="font-weight:normal;margin:22px 0 8px">Link Google Drive</h3><div id="publicGameshowDriveList"></div><p id="publicGameshowDriveEmpty" class="empty" style="display:none">Chưa có link Drive gameshow nào được đăng.</p></section>
+
 <section id="publicNovelShelf" style="margin-top:34px"><div class="section-top"><div><h2>Kệ tiểu thuyết</h2><p>Những câu chuyện và chương mới được Cá chia sẻ.</p></div></div><div id="publicNovelList" class="grid"></div><p id="publicNovelEmpty" class="empty" style="display:none">Chưa có tiểu thuyết nào được đăng.</p></section>
 
 
@@ -312,7 +312,7 @@ async function loadContent() {
   if (dr.error) console.error("Tải dramas:",dr.error.message); else dramas = dr.data || [];
   if (vi.error) console.error("Tải videos:",vi.error.message); else videos = vi.data || [];
   if (no.error) console.error("Tải novels:",no.error.message); else novels = no.data || [];
-  render(); renderManage(); renderPublicCaptionfy(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
+  render(); renderManage(); await renderVideoLibrary(); await renderNovelLibrary(); await renderPublicNovelShelf();
 }
 function cloneForm(id) { const old=$(id), fresh=old.cloneNode(true); old.replaceWith(fresh); return fresh; }
 function setupForms() {
@@ -396,12 +396,6 @@ async function renderVideoLibrary(){
   host.innerHTML=videos.map(v=>{const url=db.storage.from("goc-nho-videos").getPublicUrl(v.storage_path).data.publicUrl;return '<article class="video-item"><video controls preload="metadata" playsinline src="'+esc(url)+'"></video><h3>'+esc(v.title)+'</h3><p>'+esc(v.drama||"")+' · '+esc(v.description||"")+'</p>'+(role==="admin"?'<div class="video-actions"><button data-delete-video="'+esc(v.id)+'">Xóa video</button></div>':"")+'</article>';}).join("");
 }
 
-function renderPublicCaptionfy(){
- const collect=type=>dramas.flatMap(d=>(Array.isArray(d.links)?d.links:[]).filter(l=>l.type===type).map(l=>({drama:d.title,label:l.label,url:l.url})));
- const render=(rows,hostId,emptyId,label)=>{const host=$(hostId),empty=$(emptyId);if(!host)return;if(!rows.length){host.innerHTML="";empty.style.display="block";return;}empty.style.display="none";host.innerHTML=rows.map(l=>'<div class="episode"><span><b>'+esc(l.drama)+'</b> · '+esc(l.label)+'</span><a href="'+safeLink(l.url)+'" target="_blank" rel="noopener noreferrer">Mở '+label+' ↗</a></div>').join("");};
- render(collect("captionfy"),"publicCaptionfyList","publicCaptionfyEmpty","Captionfy");
- render(collect("gameshow_drive"),"publicGameshowDriveList","publicGameshowDriveEmpty","Google Drive");
-}
 async function renderPublicNovelShelf(){
   const host=$("publicNovelList"),empty=$("publicNovelEmpty");if(!host)return;
   if(!novels.length){host.innerHTML="";empty.style.display="block";return;}
