@@ -109,6 +109,10 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
 .sticker-picked img{width:30px;height:30px;object-fit:contain}
 [data-reply-form]{margin:12px 0 0 16px;padding:12px;border-radius:12px;background:var(--paper2)}
 [data-reply-form] textarea{width:100%}
+
+.visitor-counter{width:min(1120px,calc(100% - 32px));margin:10px auto 0;display:flex;justify-content:flex-end}
+.visitor-counter .counter-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--muted);font:13px "EB Garamond",Georgia,serif;box-shadow:0 5px 16px rgba(91,67,47,.06)}
+.visitor-counter strong{color:var(--accent);font-size:16px;font-weight:600}
 </style>
 </head>
 <body>
@@ -117,6 +121,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <div class="brand"><div class="mark">❧</div><div><h1>Góc Nhỏ Của Cá</h1><p>CÁ NHỎ HỌC SUB</p></div></div>
  <div class="nav-actions"><button class="btn" id="shareBtn" type="button">↗ Chia sẻ</button><button class="btn" id="themeBtn" type="button" aria-label="Chuyển giao diện">☾ Tối</button><button class="btn" id="accountBtn" type="button">Đăng nhập</button><button class="btn" id="homeBtn">Trang chủ</button><button class="btn primary" id="adminBtn">Quản lý</button></div>
 </div></header>
+<div class="visitor-counter" aria-live="polite"><div class="counter-pill">✧ Lượt ghé thăm <strong id="visitorCount">...</strong></div></div>
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
 <main>
@@ -629,6 +634,21 @@ window.addEventListener("pagehide",saveManageSession);
   db.auth.onAuthStateChange(()=>{setTimeout(syncAuth,0);});
   if(!session) { $("adminPanel").style.display="none"; $("videoUploader").style.display="none"; $("novelShelf").style.display="none"; }
   restoreManageSession();
+})();
+
+// Bộ đếm lượt truy cập chung của website.
+(function initVisitorCounter(){
+ const output=document.getElementById("visitorCount");
+ if(!output)return;
+ window.gocNhoVisitorCounterCallback=function(result){
+  if(result&&typeof result.value!=="undefined")output.textContent=Number(result.value).toLocaleString("vi-VN");
+  else output.textContent="—";
+ };
+ const api=document.createElement("script");
+ api.async=true;
+ api.src="https://counterapi.com/api/goc-nho-cua-ca.vercel.app/view/home?callback=gocNhoVisitorCounterCallback";
+ api.onerror=function(){output.textContent="—";};
+ document.head.appendChild(api);
 })();
 </script>
 </body></html>
