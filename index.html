@@ -121,7 +121,7 @@ footer{text-align:center;padding:28px 10px 40px;color:var(--muted);font:12px "EB
  <div class="brand"><div class="mark">❧</div><div><h1>Góc Nhỏ Của Cá</h1><p>CÁ NHỎ HỌC SUB</p></div></div>
  <div class="nav-actions"><button class="btn" id="shareBtn" type="button">↗ Chia sẻ</button><button class="btn" id="themeBtn" type="button" aria-label="Chuyển giao diện">☾ Tối</button><button class="btn" id="accountBtn" type="button">Đăng nhập</button><button class="btn" id="homeBtn">Trang chủ</button><button class="btn primary" id="adminBtn">Quản lý</button></div>
 </div></header>
-<div class="visitor-counter" aria-live="polite"><div class="counter-pill">✧ Lượt ghé thăm <span class="counterapi" ns="goc-nho-cua-ca.vercel.app" key="website-total-visits" action="view" noIcon="true" noCss="true" label="lượt"></span></div></div>
+<div class="visitor-counter" aria-live="polite"><div class="counter-pill">✧ Lượt ghé thăm <span class="counterapi" ns="goc-nho-cua-ca.vercel.app" key="website-total-visits" action="view" noIcon="true" noCss="true" label="lượt" style="display:inline-block;min-width:24px;min-height:20px"></span></div></div>
 <div class="wrap">
 <section class="hero"><div class="hero-copy"><div class="eyebrow">CÁ NHỎ HỌC SUB · A LITTLE CORNER OF STORIES</div><h2>Góc Nhỏ<br>Của Cá</h2><p>Một góc nhỏ dành cho những câu chuyện Cá yêu thích — từ các dự án phụ đề, kịch truyền thanh đến những trang tiểu thuyết. Cùng lưu giữ, khám phá và chia sẻ những điều dễ thương theo cách riêng của Cá.</p></div></section>
 <main>
@@ -636,10 +636,12 @@ window.addEventListener("pagehide",saveManageSession);
   restoreManageSession();
 })();
 
-// CounterAPI embed widget: tự tăng và hiển thị lượt truy cập tổng.
+// CounterAPI widget: nạp thư viện trực tiếp để widget khởi tạo ổn định sau khi HTML sẵn sàng.
 const counterScript=document.createElement("script");
-counterScript.src="https://counterapi.com/c.js";
+counterScript.src="https://counterapi.com/c.js?ns=goc-nho-cua-ca.vercel.app";
 counterScript.async=true;
+counterScript.onload=()=>{if(!document.querySelector(".counterapi")?.textContent.trim())console.info("CounterAPI đang chờ phản hồi.");};
+counterScript.onerror=()=>{const el=document.querySelector(".counterapi");if(el)el.textContent="—";console.warn("Không tải được bộ đếm CounterAPI.");};
 document.head.appendChild(counterScript);
 
 </script>
